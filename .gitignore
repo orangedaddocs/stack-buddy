@@ -1,0 +1,31 @@
+node_modules/
+.env
+.env.local
+*.log
+.DS_Store
+dist/
+.vite/
+.tsbuild/
+coverage/
+
+# Privacy: never commit financial details
+exports/*.csv
+chats/*.md
+scenarios/*.json
+!scenarios/default.json
+
+# Brainstorming cache (not part of project)
+.superpowers/
+
+# Claude Code project settings (local, not part of project)
+.claude/
+
+# vitest watch-mode timestamp cache (auto-generated)
+vitest.config.ts.timestamp-*.mjs
+
+# Internal session handoff notes (kept local for reference)
+docs/stack-buddy-*.md
+docs/superpowers/
+
+# Playwright MCP cache (auto-generated when driving the browser)
+.playwright-mcp/

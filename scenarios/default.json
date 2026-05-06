@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "slug": "default",
+  "name": "Default 6 BTC Five-Year Plan",
+  "created": "2026-04-27",
+  "updated": "2026-04-28",
+  "plan": {
+    "start_date": "2026-07-01",
+    "end_date": "2031-12-31",
+    "five_year_mark": "2031-06-30"
+  },
+  "goal": {
+    "starting_btc": 0,
+    "target_btc": 6
+  },
+  "btc_model": {
+    "type": "catch_up",
+    "current_price": 75800,
+    "current_date": "2026-04-29",
+    "catch_up_date": "2028-06-30",
+    "catch_up_multiplier": 1,
+    "post_catchup_multiplier": 1,
+    "base_model": "b1m",
+    "custom": null
+  },
+  "years": [
+    {
+      "year": 2026,
+      "revenue": 1000000,
+      "profit": 700000,
+      "estimated_taxes": 238000,
+      "burn_annual": 265000,
+      "burn_active_months": 6,
+      "cash_reserve": 0,
+      "locks": []
+    },
+    {
+      "year": 2027,
+      "revenue": 1000000,
+      "profit": 700000,
+      "estimated_taxes": 238000,
+      "burn_annual": 265000,
+      "burn_active_months": 12,
+      "cash_reserve": 50000,
+      "locks": []
+    },
+    {
+      "year": 2028,
+      "revenue": 1000000,
+      "profit": 700000,
+      "estimated_taxes": 238000,
+      "burn_annual": 265000,
+      "burn_active_months": 12,
+      "cash_reserve": 25000,
+      "locks": []
+    },
+    {
+      "year": 2029,
+      "revenue": 1000000,
+      "profit": 700000,
+      "estimated_taxes": 238000,
+      "burn_annual": 265000,
+      "burn_active_months": 12,
+      "cash_reserve": 0,
+      "locks": []
+    },
+    {
+      "year": 2030,
+      "revenue": 1000000,
+      "profit": 700000,
+      "estimated_taxes": 238000,
+      "burn_annual": 265000,
+      "burn_active_months": 12,
+      "cash_reserve": 0,
+      "locks": []
+    },
+    {
+      "year": 2031,
+      "revenue": 1000000,
+      "profit": 700000,
+      "estimated_taxes": 238000,
+      "burn_annual": 265000,
+      "burn_active_months": 12,
+      "cash_reserve": 0,
+      "locks": []
+    }
+  ],
+  "inflation": {
+    "rate": 0.055,
+    "apply_to": [
+      "burn_annual"
+    ]
+  },
+  "contributions": {
+    "frequency": "monthly",
+    "amount_per_period": 75000,
+    "start_date": "2027-01-01",
+    "end_date": "2031-12-31"
+  },
+  "lump_sums": [
+    {
+      "date": "2026-07-01",
+      "amount": 16000,
+      "label": "Initial 2026 stack"
+    },
+    {
+      "date": "2026-10-01",
+      "amount": 16000,
+      "label": "Q4 2026 stack"
+    }
+  ],
+  "options": {
+    "allow_deficit_plan": false,
+    "solver_uniform_tax_rate": null,
+    "solver_uniform_margin": null
+  },
+  "notes": "Default scenario. Starts at 0 BTC on Jul 1, 2026; targets 6 BTC by Dec 31, 2031. Catch-up path assumes BTC reaches 1.0× B1M Power Law by Jun 30, 2028 (~$249K). The Reality Check surfaces that $1M revenue at 70% margin doesn't fund $300K/yr of BTC after taxes/burn/reserves."
+}

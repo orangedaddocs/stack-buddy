@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --btc-orange-grad: linear-gradient(135deg, #f7931a 0%, #f97316 100%);
+}
+
+body {
+  font-family: 'Source Sans 3', system-ui, sans-serif;
+  background: theme('colors.cream.50');
+  color: theme('colors.text.secondary');
+  line-height: 1.65;
+}
+
+.btc-grad { background: var(--btc-orange-grad); }
