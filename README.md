@@ -14,7 +14,7 @@ Two questions:
 
    ![Simple tab — How much BTC can I buy each month?](docs/screenshots/home.png)
 
-2. **What schedule gets me to a BTC target by some deadline?** Compares flat monthly DCA, front-loaded buying, and a calendar-anchored "Custom mix" (monthly DCA + 2× DCA on Jan 1 and Jul 1 + a $5,000 tax-refund buy on Apr 15).
+2. **What schedule gets me to a BTC target by some deadline?** Compares flat monthly DCA, front-loaded buying, and a calendar-anchored Custom mix — for example a monthly DCA, plus 2× DCA on Jan 1 and Jul 1, plus a $5,000 tax-refund buy on Apr 15 each year.
 
    ![Three approaches — Front-load, Monthly DCA, Custom mix](docs/screenshots/plan-strategies.png)
 
@@ -69,7 +69,7 @@ Don't put seed phrases, private keys, exchange logins, or tax documents into thi
 
 ## AI is not in the app — it's a separate paste
 
-Stack Buddy itself is deterministic. The calculator does not call any LLM, and there is no in-app chat. To talk through your plan with an AI, click **"Download the catch-up prompt"** on the 3 Approaches tab. The downloaded file has the same Catch-Up Power Law math the calculator uses. Paste it into a private AI host — Maple, Venice, or PPQ — and ask away. Maple and PPQ accept Bitcoin payment.
+Stack Buddy itself is deterministic. **The calculator does not call any LLM, and there is no in-app chat.** To talk through your plan with an AI, click **"Download the catch-up prompt"** on the 3 Approaches tab. The downloaded file has the same Catch-Up Power Law math the calculator uses. Paste it into a private AI host — Maple, Venice, or PPQ — and ask away. Maple and PPQ accept Bitcoin payment.
 
 ![Want a custom plan? Talk to an AI — download the catch-up prompt + Maple / Venice / PPQ links](docs/screenshots/ask-ai-card.png)
 
