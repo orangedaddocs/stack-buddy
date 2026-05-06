@@ -1,6 +1,6 @@
 # Privacy
 
-Stack Buddy is designed to be local-first.
+Stack Buddy is a static site that runs in your browser.
 
 There is no account system.
 

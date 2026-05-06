@@ -4,7 +4,7 @@
 
 ![Plan your stack — set a target, set a deadline, see your three approaches](docs/screenshots/plan-your-stack.png)
 
-Local-first BTC stacking planner. Type in a target and a deadline, see what it takes.
+BTC stacking planner. Type in a target and a deadline, see what it takes.
 
 I built this for myself and figured I'd put it up in case anyone else wants it. Not financial advice, not tax advice, not a price prediction. Just a calculator that runs in your browser with the math in plain sight.
 
@@ -22,11 +22,9 @@ Two questions:
 
 Every buy is priced by the same model and shown in an audit table you can export as CSV or JSON.
 
-## Local-first
+## How it runs
 
-Runs on your machine. No accounts, no database, no cloud. Scenarios are JSON files in `scenarios/`. Exports are local files.
-
-**Nothing leaves your computer.** The calculator doesn't call any LLM. The only network requests it makes are to CoinGecko for the live BTC spot price on first load. AI is intentionally not in the app — see the "AI is not in the app" section below for the privacy-respecting paste flow.
+A static site you load once and use in the browser. No accounts, no database, no cloud sync. Scenarios are JSON files in `scenarios/`. Exports are local files. The calculator doesn't call any LLM. The only network requests it makes are to CoinGecko for the live BTC spot price on first load. AI is intentionally not in the app — see the "AI is not in the app" section below for the privacy-respecting paste flow.
 
 ## The three planning shapes
 

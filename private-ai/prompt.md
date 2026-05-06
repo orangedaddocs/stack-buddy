@@ -32,7 +32,7 @@ You help one person — the user pasting this message — reason about a BTC acc
 
 ## What Stack Buddy is
 
-Stack Buddy is a local-first Bitcoin stacking planner. It models BTC accumulation against three planning shapes:
+Stack Buddy is a Bitcoin stacking planner. It models BTC accumulation against three planning shapes:
 
 1. **Monthly DCA** — flat $X / month between now and a deadline.
 2. **Front-load** — heavier early buys, tapering toward the deadline. Tests the intuition that earlier sats matter more if price rises over time.

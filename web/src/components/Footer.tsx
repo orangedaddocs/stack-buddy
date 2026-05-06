@@ -7,7 +7,7 @@ export function Footer() {
   return (
     <footer className="border-t border-cream-300 bg-cream-50">
       <div className="mx-auto flex max-w-[1180px] flex-col items-center justify-between gap-2 px-4 py-4 text-sm text-text-muted sm:flex-row sm:px-8">
-        <span>Local-first BTC stacking planner</span>
+        <span>Stack Buddy</span>
         <a
           href="https://github.com/orangedaddocs/stack-buddy#readme"
           target="_blank"

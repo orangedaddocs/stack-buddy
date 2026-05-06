@@ -31,9 +31,6 @@ export function Header() {
             <h1 className="truncate text-xl font-semibold leading-tight text-text-primary sm:text-2xl">
               Stack Buddy
             </h1>
-            <p className="truncate text-xs text-text-muted sm:text-sm">
-              Local-first BTC stacking planner
-            </p>
           </div>
         </div>
 
