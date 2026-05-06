@@ -16,7 +16,7 @@ It does not connect to the app. It does not run code. It is just text. The LLM i
 1. Open a fresh Maple AI conversation. Pick a model that supports a long initial context (Kimi K2, GLM-4.6, DeepSeek, Llama 3.3 70B, GPT-OSS, etc.).
 2. Paste **everything** from the `--- PROMPT BEGINS ---` line down to the `--- PROMPT ENDS ---` line as your first message.
 3. As your second message, give the model your situation. Either:
-   - Paste an audit packet exported from Stack Buddy (the **Copy audit packet for ChatGPT** button on the audit panel), or
+   - Paste an audit packet exported from Stack Buddy (the **Copy this plan** button on the audit panel), or
    - Type out your own version: BTC target, deadline, current spot, monthly available, any planned lump sums.
 4. Ask questions.
 
@@ -177,23 +177,12 @@ The Stack Buddy app exports an audit packet you can recognize as JSON of roughly
     "catchupPrice": <number>,
     "postCatchup": "b1m_1x"
   },
-  "cashFlow": {
-    "annualIncome": <number>,
-    "taxRate": <0..1>,
-    "annualBurn": <number>,
-    "annualCashSavings": <number>,
-    "netAvailableForBtcAnnual": <number>,
-    "netAvailableForBtcMonthly": <number>,
-    "cashFlowShortfall": <number>
-  },
   "goal": { "additionalBtcToBuy": <number>, "deadline": "YYYY-MM-DD" },
   "plan": {
     "type": "monthly | front_load | lump_sums | none",
     "totalDeployed": <number>,
     "btcAtDeadline": <number>,
-    "fiatValueAtDeadline": <number>,
-    "cashUsageRate": <0..>,
-    "feasibilityLabel": "Comfortable | Manageable | Tight | Very tight | Unfunded"
+    "fiatValueAtDeadline": <number>
   },
   "auditRows": [
     {

@@ -3,8 +3,9 @@
 // at private-ai/README.md, which stays the authoritative deep doc.
 //
 // The download button serves /prompt.md from web/public/, which mirrors
-// private-ai/prompt.md verbatim. CI/dev should keep these two files
-// byte-identical (see scripts/check-prompt-mirror.sh).
+// private-ai/prompt.md verbatim. The `prompt:check` npm script (wired as
+// pretest in package.json) diffs the two and fails CI on drift; resync
+// after editing private-ai/prompt.md with `npm run prompt:sync`.
 
 export function UseYourAITab() {
   return (

@@ -98,13 +98,6 @@ export function PlanTab(props: {
     [activePlan, currentPrice, today, activeSelectedKind],
   );
 
-  const cashUsageRate = useMemo(() => {
-    const totalAvailable = Math.max(0, monthlyAvailable) * Math.max(0, monthsToDeadline);
-    if (totalAvailable <= 0) return projection.totalDollarsDeployed > 0 ? Infinity : 0;
-    return projection.totalDollarsDeployed / totalAvailable;
-  }, [monthlyAvailable, monthsToDeadline, projection.totalDollarsDeployed]);
-  const feasibilityLabel = cashUsageLabel(cashUsageRate);
-
   const evaluatedStrategies: EvaluatedPlanStrategy[] | null = useMemo(() => {
     const totalAvailable = Math.max(0, monthlyAvailable) * Math.max(0, monthsToDeadline);
     return approachStrategies.map((strategy) => {
@@ -197,44 +190,66 @@ export function PlanTab(props: {
 
       <PlanGoalCard goal={plan.goal} onGoalChange={setGoal} />
 
-      <PlanAIAdvisor
-        strategies={evaluatedStrategies}
-        selectedKind={activeSelectedKind}
-        onSelect={applyStrategy}
-        onViewAudit={() => {
-          setAuditOpenRequestId((id) => id + 1);
-          // Tiny delay so the <details> finishes expanding before the scroll
-          // — otherwise the browser scrolls to the still-collapsed top edge
-          // and the rows you wanted to see end up below the viewport.
-          setTimeout(() => {
-            document.getElementById('every-buy-panel')?.scrollIntoView({
-              behavior: 'smooth',
-              block: 'start',
-            });
-          }, 80);
-        }}
-      />
-      <AskAICard />
+      {/* Gate every result-bearing component on a real BTC spot price.
+          Without it, projectPlan returns an empty projection and every card
+          below shows "0 BTC" — looks like the calculator is broken. The
+          live price comes from CoinGecko via useBtcPrice; first paint is
+          ~200-1500ms after mount (longer if rate-limited). Show a clear
+          loading state until then. */}
+      {currentPrice > 0 ? (
+        <>
+          <PlanAIAdvisor
+            strategies={evaluatedStrategies}
+            selectedKind={activeSelectedKind}
+            onSelect={applyStrategy}
+            onViewAudit={() => {
+              setAuditOpenRequestId((id) => id + 1);
+              // Tiny delay so the <details> finishes expanding before the scroll
+              // — otherwise the browser scrolls to the still-collapsed top edge
+              // and the rows you wanted to see end up below the viewport.
+              setTimeout(() => {
+                document.getElementById('every-buy-panel')?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'start',
+                });
+              }, 80);
+            }}
+          />
+          <AskAICard />
 
-      <PlanTimingSummary projection={projection} />
+          <PlanTimingSummary projection={projection} />
 
-      {projection.excludedLumpSums.length > 0 && (
-        <ExcludedLumpsNote excluded={projection.excludedLumpSums} />
+          {projection.excludedLumpSums.length > 0 && (
+            <ExcludedLumpsNote excluded={projection.excludedLumpSums} />
+          )}
+
+          <PlanAccumulationChart
+            chosen={projection}
+            alternatives={alternatives.length > 0 ? alternatives : undefined}
+            targetBtc={plan.goal.target_btc}
+            onShowModelsTab={props.onShowModelsTab}
+          />
+
+          <PlanAuditPanel
+            projection={projection}
+            plan={plan}
+            selectedKind={activeSelectedKind}
+            openRequestId={auditOpenRequestId}
+          />
+        </>
+      ) : (
+        <div
+          id="plan-results"
+          className="rounded-2xl border border-cream-300 bg-white p-7 text-center"
+        >
+          <p className="text-base text-text-muted">
+            Waiting for live BTC price from CoinGecko…
+          </p>
+          <p className="mt-2 text-sm text-text-muted">
+            Plans below populate once the spot price loads. If this takes more than a few seconds, your network may be blocking the request — tap the BTC pill in the header to retry.
+          </p>
+        </div>
       )}
-
-      <PlanAccumulationChart
-        chosen={projection}
-        alternatives={alternatives.length > 0 ? alternatives : undefined}
-        targetBtc={plan.goal.target_btc}
-        onShowModelsTab={props.onShowModelsTab}
-      />
-
-      <PlanAuditPanel
-        projection={projection}
-        plan={plan}
-        selectedKind={activeSelectedKind}
-        openRequestId={auditOpenRequestId}
-      />
     </div>
   );
 }

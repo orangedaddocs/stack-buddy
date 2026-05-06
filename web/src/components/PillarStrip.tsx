@@ -2,8 +2,8 @@ import type { Tab } from './Header.js';
 
 // PillarStrip is the always-visible 4-pillar nav that lives between the
 // header and the main content. Replaces the in-header tab nav. Each pillar
-// renders a card with number, name, and a one-liner; the active pillar gets
-// a cream-orange highlight. On mobile (<sm) the strip is a 2x2 grid; on
+// renders a card with name + one-liner; the active pillar gets a
+// cream-orange highlight. On mobile (<sm) the strip is a 2x2 grid; on
 // desktop it's 4 across.
 //
 // PILLARS is the canonical source of truth for pillar copy and order — any

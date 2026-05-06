@@ -35,13 +35,21 @@ export function Header() {
         </div>
 
         {/* Mobile BTC pill — just ₿ + price, no card chrome. Hidden on
-            desktop where the full card below renders instead. */}
-        <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-white px-2.5 py-1.5 text-base font-bold tabular-nums text-text-primary shadow-sm sm:hidden">
+            desktop where the full card below renders instead. The whole
+            pill is a button so a tap re-fetches from CoinGecko (the
+            multiplier + refresh-time controls only render on desktop, so
+            this is the only manual-refresh affordance for phone users). */}
+        <button
+          type="button"
+          onClick={btc.refresh}
+          title="Tap to refresh BTC spot price"
+          className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-white px-2.5 py-1.5 text-base font-bold tabular-nums text-text-primary shadow-sm transition active:opacity-70 sm:hidden"
+        >
           <span className="btc-grad flex h-5 w-5 items-center justify-center rounded-md text-xs font-bold text-white">
             ₿
           </span>
           {btc.price ? `$${Math.round(btc.price).toLocaleString('en-US')}` : '—'}
-        </div>
+        </button>
 
         {/* Desktop BTC card — full detail (label, multiplier, refresh) */}
         <div className="hidden items-center gap-4 rounded-2xl border border-cream-300 bg-white px-4 py-2 shadow-sm sm:flex">

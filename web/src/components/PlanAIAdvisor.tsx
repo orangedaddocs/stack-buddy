@@ -43,7 +43,7 @@ export function PlanAIAdvisor(props: {
       {props.strategies && (
         <div className="space-y-3">
           <p className="text-base leading-relaxed text-text-secondary">
-            Each approach is priced by the deterministic calculator under the Catch-Up Power Law and checked against your cash flow. Pick one to drop into the chart and audit table.
+            Each approach scales to hit your BTC target by the deadline, priced under the Catch-Up Power Law. Pick one to drop into the chart and audit table — these are aspirational schedules; cash-flow reality lives on the Simple tab.
           </p>
           {props.strategies.map((view) => {
             const s = view.strategy;

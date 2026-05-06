@@ -52,9 +52,15 @@ export function PlanGoalCard(props: {
           if (document.activeElement instanceof HTMLElement) {
             document.activeElement.blur();
           }
-          document
-            .getElementById('plan-results')
-            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Defer the scroll so iOS Safari has a chance to dismiss its
+          // keyboard first — otherwise the smooth-scroll lands at the
+          // pre-dismissal viewport offset and ends up too short, leaving
+          // the strategy cards still partly under where the keyboard was.
+          requestAnimationFrame(() => {
+            document
+              .getElementById('plan-results')
+              ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
         }}
         className="btc-grad mt-5 w-full rounded-xl px-5 py-3 text-base font-semibold text-white shadow-sm transition hover:opacity-90 sm:w-auto"
       >
