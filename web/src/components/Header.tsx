@@ -5,9 +5,11 @@ import { b1mPrice } from '../../../shared/math/powerLaw.js';
 // imports this and exports the canonical PILLARS metadata array.
 export type Tab = 'simple' | 'plan' | 'models' | 'ai';
 
-// Header is now brand + BTC card only. The tab nav lives in PillarStrip
-// just below the header. On mobile, the BTC card collapses to price-only —
-// the multiplier and refresh button are kept on desktop where there's room.
+// Header is brand block + BTC spot card, always on a single row at every
+// viewport. On mobile the BTC card collapses to a bare-minimum "₿ $98,432"
+// inline pill so it can sit beside the brand block at 390px without
+// wrapping. The full-detail BTC card (label, multiplier, refresh-time
+// button) only appears on desktop where there's room.
 export function Header() {
   const btc = useBtcPrice();
   const today = new Date();
@@ -19,51 +21,56 @@ export function Header() {
 
   return (
     <div className="border-b border-cream-300 bg-cream-50">
-      <div className="mx-auto flex max-w-[1180px] flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-5 sm:px-8 sm:py-4">
-        {/* Brand block — icon + title + subtitle (subtitle visible on all
-            viewports for content parity with desktop) */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="btc-grad flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl font-bold text-white shadow-[0_4px_16px_rgba(247,147,26,0.28)] sm:h-11 sm:w-11 sm:text-2xl">
+      <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-3 px-4 py-3 sm:gap-5 sm:px-8 sm:py-4">
+        {/* Brand block — icon + title + subtitle, all viewports */}
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+          <div className="btc-grad flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-2xl font-bold text-white shadow-[0_4px_16px_rgba(247,147,26,0.28)]">
             ₿
           </div>
-          <div>
-            <h1 className="whitespace-nowrap text-lg font-semibold leading-tight text-text-primary sm:text-xl">
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-semibold leading-tight text-text-primary sm:text-2xl">
               Stack Buddy
             </h1>
-            <p className="text-sm text-text-muted">Local-first BTC stacking planner</p>
+            <p className="truncate text-xs text-text-muted sm:text-sm">
+              Local-first BTC stacking planner
+            </p>
           </div>
         </div>
 
-        {/* BTC spot card — full detail on desktop, price-only on mobile */}
-        <div className="flex items-center justify-end gap-3 sm:gap-4">
-          <div className="flex items-center gap-3 rounded-xl border border-cream-300 bg-white px-3 py-1.5 shadow-sm sm:gap-4 sm:rounded-2xl sm:px-4 sm:py-2">
-            <div className="btc-grad flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-base font-bold text-white sm:h-9 sm:w-9 sm:rounded-xl sm:text-lg">
-              ₿
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-bold uppercase tracking-wide text-text-muted sm:text-sm">
-                BTC spot
-              </span>
-              <span className="text-base font-bold leading-tight tabular-nums text-text-primary sm:text-[22px]">
-                {btc.price ? `$${Math.round(btc.price).toLocaleString('en-US')}` : '—'}
-              </span>
-            </div>
-            {/* Multiplier + refresh — desktop-only. Mobile keeps just the
-                price for a calmer header. Per Jay: "we don't need to
-                multiply a power law and how many minutes ago" on phones. */}
-            <div className="hidden flex-col items-end border-l border-cream-200 pl-3 sm:flex sm:pl-4">
-              <span className="whitespace-nowrap text-sm font-semibold tabular-nums text-btc-orange-end sm:text-base">
-                {multiplier !== null ? `${multiplier.toFixed(2)}× PL` : '—'}
-              </span>
-              <button
-                onClick={btc.refresh}
-                className="whitespace-nowrap text-xs text-text-faint hover:text-btc-orange-end sm:text-sm"
-                title="Refresh from CoinGecko"
-              >
-                ↻ {btc.updatedAt ? formatRelative(btc.updatedAt) : 'never'}
-                {btc.stale ? ' (stale)' : ''}
-              </button>
-            </div>
+        {/* Mobile BTC pill — just ₿ + price, no card chrome. Hidden on
+            desktop where the full card below renders instead. */}
+        <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-white px-2.5 py-1.5 text-base font-bold tabular-nums text-text-primary shadow-sm sm:hidden">
+          <span className="btc-grad flex h-5 w-5 items-center justify-center rounded-md text-xs font-bold text-white">
+            ₿
+          </span>
+          {btc.price ? `$${Math.round(btc.price).toLocaleString('en-US')}` : '—'}
+        </div>
+
+        {/* Desktop BTC card — full detail (label, multiplier, refresh) */}
+        <div className="hidden items-center gap-4 rounded-2xl border border-cream-300 bg-white px-4 py-2 shadow-sm sm:flex">
+          <div className="btc-grad flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg font-bold text-white">
+            ₿
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-bold uppercase tracking-wide text-text-muted">
+              BTC spot
+            </span>
+            <span className="text-[22px] font-bold leading-tight tabular-nums text-text-primary">
+              {btc.price ? `$${Math.round(btc.price).toLocaleString('en-US')}` : '—'}
+            </span>
+          </div>
+          <div className="flex flex-col items-end border-l border-cream-200 pl-4">
+            <span className="whitespace-nowrap text-base font-semibold tabular-nums text-btc-orange-end">
+              {multiplier !== null ? `${multiplier.toFixed(2)}× PL` : '—'}
+            </span>
+            <button
+              onClick={btc.refresh}
+              className="whitespace-nowrap text-sm text-text-faint hover:text-btc-orange-end"
+              title="Refresh from CoinGecko"
+            >
+              ↻ {btc.updatedAt ? formatRelative(btc.updatedAt) : 'never'}
+              {btc.stale ? ' (stale)' : ''}
+            </button>
           </div>
         </div>
       </div>
