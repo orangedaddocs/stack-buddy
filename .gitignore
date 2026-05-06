@@ -29,3 +29,7 @@ docs/superpowers/
 
 # Playwright MCP cache (auto-generated when driving the browser)
 .playwright-mcp/
+
+# macOS Cmd+Shift+4 captures dropped into the repo for reference. The
+# canonical screenshots live in docs/screenshots/ with descriptive names.
+docs/screenshots/Screenshot*.png

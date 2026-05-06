@@ -14,7 +14,7 @@ Two questions:
 
    ![Simple tab — How much BTC can I buy each month?](docs/screenshots/home.png)
 
-2. **What schedule gets me to a BTC target by some deadline?** Compares flat monthly DCA, front-loaded buying, and DCA plus dated lump sums against your cash flow.
+2. **What schedule gets me to a BTC target by some deadline?** Compares flat monthly DCA, front-loaded buying, and a calendar-anchored "Custom mix" (monthly DCA + 2× DCA on Jan 1 and Jul 1 + a $5,000 tax-refund buy on Apr 15).
 
    ![Three approaches — Front-load, Monthly DCA, Custom mix](docs/screenshots/plan-strategies.png)
 
@@ -22,9 +22,9 @@ Every buy is priced by the same model and shown in an audit table you can export
 
 ## Local-first
 
-Runs on your machine. No accounts, no database, no cloud. Scenarios are JSON files in `scenarios/`. Exports are local files. Chats, if you save any, are local Markdown.
+Runs on your machine. No accounts, no database, no cloud. Scenarios are JSON files in `scenarios/`. Exports are local files.
 
-If you don't connect an AI provider, nothing leaves your computer. If you do, your scenario goes to whichever provider you configured. Privacy is theirs from then on.
+**Nothing leaves your computer.** The calculator doesn't call any LLM. The only network requests it makes are to CoinGecko for the live BTC spot price on first load. AI is intentionally not in the app — see the "AI is not in the app" section below for the privacy-respecting paste flow.
 
 ## The three planning shapes
 
@@ -48,9 +48,15 @@ It's a planning assumption, not a forecast. Change the assumption and the plan c
 
 ## Auditability
 
-Every projection emits a row per buy: date, type, USD amount, BTC price used, the 1.0× trendline price on that date, the multiplier (price ÷ trendline), BTC bought, cumulative BTC, cumulative dollars deployed, fiat value. The displayed totals reconcile against the row sums before they're shown; if anything is out of sync, the UI flags it red.
+Every projection emits a row per buy: date, label, USD amount, BTC price used, the 1.0× trendline price on that date, the multiplier (price ÷ trendline), BTC bought, cumulative BTC, cumulative dollars deployed, fiat value. The displayed totals reconcile against the row sums before they're shown; if anything is out of sync, the UI flags it red.
 
-Three buttons on the audit panel: download CSV, export plan JSON, copy audit packet for ChatGPT.
+![Every buy — top of the audit table with totals and the first rows](docs/screenshots/audit-table.png)
+
+Three buttons on the panel: download as CSV, export as JSON, or copy the whole plan as a JSON packet for pasting into an AI session.
+
+The accumulation curve chart shows the chosen plan in orange next to faint alternative-strategy curves and the fiat-value line. Custom mix shows visible bumps from the Jan 1, Jul 1, and Apr 15 buys — different shape from a flat DCA curve:
+
+![Accumulation curve — Custom mix shows step-bumps from Jan 1 / Jul 1 / Apr 15](docs/screenshots/accumulation-curve.png)
 
 ## Income inputs
 
@@ -63,9 +69,11 @@ Don't put seed phrases, private keys, exchange logins, or tax documents into thi
 
 ## AI is not in the app — it's a separate paste
 
-Stack Buddy itself is deterministic. The calculator does not call any LLM, and there is no in-app chat. You either use the calculator, or — if you want to reason through your plan with an AI — you paste [`private-ai/prompt.md`](private-ai/prompt.md) into a private AI host (Maple or Venice). The prompt has the same Catch-Up Power Law math the calculator uses; your scenario stays in the chat host you chose.
+Stack Buddy itself is deterministic. The calculator does not call any LLM, and there is no in-app chat. To talk through your plan with an AI, click **"Download the catch-up prompt"** on the 3 Approaches tab. The downloaded file has the same Catch-Up Power Law math the calculator uses. Paste it into a private AI host — Maple, Venice, or PPQ — and ask away. Maple and PPQ accept Bitcoin payment.
 
-See [`private-ai/`](private-ai/) for the workflow.
+![Want a custom plan? Talk to an AI — download the catch-up prompt + Maple / Venice / PPQ links](docs/screenshots/ask-ai-card.png)
+
+See [`private-ai/`](private-ai/) for setup notes — privacy postures of each host, what NOT to paste, the full workflow.
 
 ## What this isn't
 

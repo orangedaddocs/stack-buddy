@@ -117,12 +117,11 @@ export function PlanAuditPanel(props: {
       </div>
 
       <div className="mt-5 overflow-x-auto">
-        <table className="min-w-[1280px] border-collapse text-base">
+        <table className="min-w-[1100px] border-collapse text-base">
           <thead>
             <tr className="border-b border-cream-300 text-left text-text-muted">
               <Th>#</Th>
               <Th>Date</Th>
-              <Th>Type</Th>
               <Th>Label</Th>
               <Th>USD amount</Th>
               <Th>BTC price used</Th>
@@ -132,7 +131,6 @@ export function PlanAuditPanel(props: {
               <Th>Cumulative BTC</Th>
               <Th>Cumulative deployed</Th>
               <Th>Fiat value</Th>
-              <Th>Notes</Th>
             </tr>
           </thead>
           <tbody>
@@ -140,7 +138,6 @@ export function PlanAuditPanel(props: {
               <tr key={`${row.row_number}-${row.date_iso}-${row.label}`} className="border-b border-cream-200 last:border-0">
                 <Td>{row.row_number}</Td>
                 <Td>{row.date_iso}</Td>
-                <Td>{row.contribution_type.replace('_', ' ')}</Td>
                 <Td>{row.label}</Td>
                 <Td>{formatUSD(row.amount_usd)}</Td>
                 <Td>{formatUSD(row.btc_price_used)}</Td>
@@ -150,7 +147,6 @@ export function PlanAuditPanel(props: {
                 <Td>{row.cumulative_btc.toFixed(8)}</Td>
                 <Td>{formatUSD(row.cumulative_deployed)}</Td>
                 <Td>{formatUSD(row.fiat_value)}</Td>
-                <Td>{row.notes}</Td>
               </tr>
             ))}
           </tbody>
@@ -203,9 +199,13 @@ function buildAuditPacket(props: {
 }
 
 export function auditRowsToCsv(rows: PlanProjectionResult['audit']['auditRows']): string {
+  // Match the on-screen audit table — same 11 columns, same order. Drop the
+  // legacy contribution_type (always "ai_strategy" or "manual" — redundant
+  // with `label`) and `notes` (generic, never per-row useful). Model
+  // metadata stays as trailing columns so a power user can verify the
+  // pricing assumption row-by-row.
   const fields = [
     'date_iso',
-    'contribution_type',
     'label',
     'amount_usd',
     'btc_price_used',
