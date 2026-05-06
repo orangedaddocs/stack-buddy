@@ -34,9 +34,7 @@ export function Header(props: { tab: Tab; onTabChange: (t: Tab) => void; onShowA
               Simple
             </TabButton>
             <TabButton active={props.tab === 'plan'} onClick={() => props.onTabChange('plan')}>
-              {/* Shorter label on mobile so the tab row fits on one line at 375px */}
-              <span className="sm:hidden">Plan</span>
-              <span className="hidden sm:inline">3 Approaches</span>
+              3 Approaches
             </TabButton>
             <TabButton active={props.tab === 'models'} onClick={() => props.onTabChange('models')}>
               Models
