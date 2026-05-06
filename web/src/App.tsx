@@ -2,17 +2,18 @@ import { useState } from 'react';
 import { useScenario } from './hooks/useScenario.js';
 import { useBtcPrice } from './hooks/useBtcPrice.js';
 import { Header, type Tab } from './components/Header.js';
+import { PillarStrip } from './components/PillarStrip.js';
+import { Footer } from './components/Footer.js';
 import { SimpleCard, type SimpleInputs, SIMPLE_DEFAULTS } from './components/SimpleCard.js';
 import { SimpleResult } from './components/SimpleResult.js';
 import { SimpleAccumulation } from './components/SimpleAccumulation.js';
 import { PlanTab } from './components/PlanTab.js';
 import { ModelsTab } from './components/ModelsTab.js';
-import { AboutPanel } from './components/AboutPanel.js';
+import { UseYourAITab } from './components/UseYourAITab.js';
 
 export function App() {
   const { scenario, loading, error } = useScenario('default');
   const btc = useBtcPrice();
-  const [aboutOpen, setAboutOpen] = useState(false);
   const [tab, setTab] = useState<Tab>('simple');
 
   // Simple tab starts blank — the user fills in their own numbers. BTC price
@@ -26,7 +27,8 @@ export function App() {
 
   return (
     <>
-      <Header tab={tab} onTabChange={setTab} onShowAbout={() => setAboutOpen(true)} />
+      <Header />
+      <PillarStrip active={tab} onChange={setTab} />
 
       <main className="mx-auto max-w-[1180px] px-6 pb-12 pt-8">
         {tab === 'simple' ? (
@@ -55,12 +57,14 @@ export function App() {
             livePrice={btc.price}
             onShowModelsTab={() => setTab('models')}
           />
-        ) : (
+        ) : tab === 'models' ? (
           <ModelsTab livePrice={btc.price} />
+        ) : (
+          <UseYourAITab />
         )}
       </main>
 
-      <AboutPanel open={aboutOpen} onClose={() => setAboutOpen(false)} />
+      <Footer />
     </>
   );
 }

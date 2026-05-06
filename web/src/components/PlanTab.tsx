@@ -1,17 +1,13 @@
 import { useMemo, useState } from 'react';
 import { differenceInMonths, parseISO } from 'date-fns';
 import type {
-  LumpSum,
   PlanGoal,
-  PlanRecurring,
   PlanState,
   PlanStrategy,
   PlanStrategyKind,
   Scenario,
 } from '../../../shared/types.js';
 import { PlanGoalCard } from './PlanGoalCard.js';
-import { PlanRecurringEditor } from './PlanRecurringEditor.js';
-import { PlanLumpSumEditor } from './PlanLumpSumEditor.js';
 import { PlanAccumulationChart, type ChartAlternative } from './PlanAccumulationChart.js';
 import { PlanAIAdvisor, type EvaluatedPlanStrategy } from './PlanAIAdvisor.js';
 import { AskAICard } from './AskAICard.js';
@@ -26,10 +22,7 @@ import {
   makeDefaultApproachStrategies,
   scaleStrategyToTarget,
   strategyToPlan,
-  targetRecurringForShape,
 } from '../lib/strategyScaling.js';
-
-type PlanMode = 'approaches' | 'custom';
 
 // 3 Approaches is intentionally disconnected from the Simple tab. This tab is
 // the *aspirational* view: "here's what it takes to hit your BTC goal" without
@@ -49,7 +42,6 @@ export function PlanTab(props: {
   const monthlyAvailable = 0;
 
   const [plan, setPlan] = useState<PlanState>(() => initialPlan(today, props.scenario, currentPrice));
-  const [planMode, setPlanMode] = useState<PlanMode>('approaches');
   const [selectedKind, setSelectedKind] = useState<PlanStrategyKind | null>('monthly');
   const [auditOpenRequestId, setAuditOpenRequestId] = useState(0);
   // Constraints used to come from a user-notes textarea ("front-load only,
@@ -74,10 +66,10 @@ export function PlanTab(props: {
       }),
     [plan.goal, plan.starting_btc, currentPrice, today, monthlyAvailable, monthsToDeadline, planConstraints],
   );
-  const activeSelectedKind = planMode === 'approaches' ? selectedKind : null;
+  const activeSelectedKind = selectedKind;
 
   const selectedStrategyForPlan = useMemo(() => {
-    if (planMode !== 'approaches' || !selectedKind) return null;
+    if (!selectedKind) return null;
     const strategy = approachStrategies.find((s) => s.kind === selectedKind);
     if (!strategy) return null;
     return scaleStrategyToTarget(strategy, {
@@ -88,7 +80,7 @@ export function PlanTab(props: {
       monthsToDeadline,
       constraints: planConstraints,
     });
-  }, [approachStrategies, planMode, selectedKind, plan, currentPrice, today, monthlyAvailable, monthsToDeadline, planConstraints]);
+  }, [approachStrategies, selectedKind, plan, currentPrice, today, monthlyAvailable, monthsToDeadline, planConstraints]);
 
   const activePlan = useMemo(
     () => (selectedStrategyForPlan ? strategyToPlan(selectedStrategyForPlan, plan) : plan),
@@ -182,7 +174,6 @@ export function PlanTab(props: {
   }, [evaluatedStrategies, activeSelectedKind, plan.goal, plan.starting_btc, currentPrice, today]);
 
   const applyStrategy = (s: PlanStrategy) => {
-    setPlanMode('approaches');
     setSelectedKind(s.kind);
     setPlan((prev) => ({
       ...prev,
@@ -191,91 +182,39 @@ export function PlanTab(props: {
     }));
   };
 
-  // Don't auto-rescale the recurring amount when the user changes target_btc
-  // or deadline. In Build manually mode the user is in control of the amount;
-  // silently snapping their $2,000/month back to whatever auto-targets the
-  // goal is exactly the kind of "the calculator decided for me" behavior that
-  // breaks trust. The chart and feasibility verdict will reflect the new goal
-  // automatically — the target line moves, the cash-usage label updates.
   const setGoal = (goal: PlanGoal) => setPlan((p) => ({ ...p, goal }));
-  const setRecurring = (recurring: PlanRecurring) => {
-    setSelectedKind(null);
-    setPlanMode('custom');
-    setPlan((p) => {
-      if (recurring.shape === p.recurring.shape) return { ...p, recurring };
-      return {
-        ...p,
-        recurring: targetRecurringForShape(
-          { ...p, recurring },
-          recurring.shape,
-          currentPrice,
-          today,
-          monthlyAvailable,
-          monthsToDeadline,
-        ),
-      };
-    });
-  };
-  const setLumps = (lump_sums: LumpSum[]) => {
-    setSelectedKind(null);
-    setPlanMode('custom');
-    setPlan((p) => ({ ...p, lump_sums }));
-  };
 
   return (
     <div className="mx-auto max-w-[860px] space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="mb-2 text-3xl font-bold leading-tight text-text-primary">
-            Plan your stack
-          </h2>
-          <p className="text-base leading-relaxed text-text-secondary">
-            Compare monthly DCA, front-loading, and lump-sum paths to a BTC target. The calculator prices every buy under the Catch-Up Power Law and shows the audit table below.
-          </p>
-        </div>
-        <PlanModeToggle
-          value={planMode}
-          onChange={(mode) => {
-            setPlanMode(mode);
-            if (mode === 'approaches' && !selectedKind) setSelectedKind('monthly');
-          }}
-        />
+      <div>
+        <h2 className="mb-2 text-3xl font-bold leading-tight text-text-primary">
+          Plan your stack
+        </h2>
+        <p className="text-base leading-relaxed text-text-secondary">
+          Compare monthly DCA, front-loading, and lump-sum paths to a BTC target. The calculator prices every buy under the Catch-Up Power Law and shows the audit table below.
+        </p>
       </div>
 
       <PlanGoalCard goal={plan.goal} onGoalChange={setGoal} />
 
-      {planMode === 'approaches' ? (
-        <>
-          <PlanAIAdvisor
-            strategies={evaluatedStrategies}
-            selectedKind={activeSelectedKind}
-            onSelect={applyStrategy}
-            onViewAudit={() => {
-            setAuditOpenRequestId((id) => id + 1);
-            // Tiny delay so the <details> finishes expanding before the scroll
-            // — otherwise the browser scrolls to the still-collapsed top edge
-            // and the rows you wanted to see end up below the viewport.
-            setTimeout(() => {
-              document.getElementById('every-buy-panel')?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start',
-              });
-            }, 80);
-          }}
-          />
-          <AskAICard />
-        </>
-      ) : (
-        <>
-          <PlanRecurringEditor
-            value={plan.recurring}
-            monthsToDeadline={monthsToDeadline}
-            onChange={setRecurring}
-          />
-
-          <PlanLumpSumEditor value={plan.lump_sums} onChange={setLumps} />
-        </>
-      )}
+      <PlanAIAdvisor
+        strategies={evaluatedStrategies}
+        selectedKind={activeSelectedKind}
+        onSelect={applyStrategy}
+        onViewAudit={() => {
+          setAuditOpenRequestId((id) => id + 1);
+          // Tiny delay so the <details> finishes expanding before the scroll
+          // — otherwise the browser scrolls to the still-collapsed top edge
+          // and the rows you wanted to see end up below the viewport.
+          setTimeout(() => {
+            document.getElementById('every-buy-panel')?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start',
+            });
+          }, 80);
+        }}
+      />
+      <AskAICard />
 
       <PlanTimingSummary projection={projection} />
 
@@ -297,35 +236,6 @@ export function PlanTab(props: {
         openRequestId={auditOpenRequestId}
       />
     </div>
-  );
-}
-
-function PlanModeToggle(props: { value: PlanMode; onChange: (mode: PlanMode) => void }) {
-  return (
-    <div className="inline-flex shrink-0 rounded-xl border border-cream-300 bg-white p-1 text-base">
-      <ModeButton active={props.value === 'approaches'} onClick={() => props.onChange('approaches')}>
-        Guided plan
-      </ModeButton>
-      <ModeButton active={props.value === 'custom'} onClick={() => props.onChange('custom')}>
-        Build manually
-      </ModeButton>
-    </div>
-  );
-}
-
-function ModeButton(props: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={props.onClick}
-      className={
-        props.active
-          ? 'btc-grad rounded-lg px-3.5 py-1.5 text-base font-semibold text-white shadow-sm'
-          : 'rounded-lg px-3.5 py-1.5 text-base font-medium text-text-secondary hover:bg-cream-100 hover:text-text-primary'
-      }
-    >
-      {props.children}
-    </button>
   );
 }
 

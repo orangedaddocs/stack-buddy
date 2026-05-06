@@ -7,10 +7,13 @@
     "dev": "cd web && vite",
     "build": "cd web && vite build",
     "preview": "cd web && vite preview --port 2035",
+    "pretest": "npm run prompt:check",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -b",
-    "lint": "eslint . --ext .ts,.tsx"
+    "lint": "eslint . --ext .ts,.tsx",
+    "prompt:sync": "cp private-ai/prompt.md web/public/prompt.md",
+    "prompt:check": "diff -q private-ai/prompt.md web/public/prompt.md"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

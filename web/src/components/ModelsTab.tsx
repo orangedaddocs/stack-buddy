@@ -45,6 +45,20 @@ export function ModelsTab(props: { livePrice: number | null }) {
         </p>
       </div>
 
+      <div className="rounded-2xl border border-cream-300 bg-cream-50 px-5 py-3 text-sm leading-relaxed text-text-secondary">
+        <span className="font-semibold text-text-primary">Where this model comes from:</span>{' '}
+        Built on the Bitcoin Power Law (
+        <a
+          href="https://medium.com/coinmonks/bitcoin-power-law-theory-962dfaf99ee9"
+          target="_blank"
+          rel="noreferrer"
+          className="text-btc-orange-end hover:underline"
+        >
+          Giovanni Santostasi
+        </a>
+        ), with B1M trendline parameters, modified to converge from current spot to the trendline by June 30, 2028. Full references below.
+      </div>
+
       <SnapshotCard snapshot={snapshot} />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
