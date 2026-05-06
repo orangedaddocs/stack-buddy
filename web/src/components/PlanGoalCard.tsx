@@ -40,6 +40,30 @@ export function PlanGoalCard(props: {
           />
         </Field>
       </div>
+
+      {/* See-results button. The plans below this card auto-recalculate as
+          you type, but on a phone the keyboard covers them — so this button
+          dismisses the keyboard (blurs the focused input) and scrolls to
+          the strategy cards. Doubles as the "Calculate" affordance for
+          users who expect an explicit commit step. */}
+      <button
+        type="button"
+        onClick={() => {
+          if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+          }
+          document
+            .getElementById('plan-results')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }}
+        className="btc-grad mt-5 w-full rounded-xl px-5 py-3 text-base font-semibold text-white shadow-sm transition hover:opacity-90 sm:w-auto"
+      >
+        See updated plan ↓
+      </button>
+
+      <p className="mt-2 text-sm text-text-muted">
+        Plans below recalculate as you change these — tap the button if the keyboard is covering them.
+      </p>
     </div>
   );
 }

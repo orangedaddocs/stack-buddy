@@ -39,7 +39,7 @@ export function PlanAIAdvisor(props: {
   if (!props.strategies) return null;
 
   return (
-    <div className="rounded-[20px] border border-cream-300 bg-cream-50 p-6">
+    <div id="plan-results" className="scroll-mt-4 rounded-[20px] border border-cream-300 bg-cream-50 p-6">
       {props.strategies && (
         <div className="space-y-3">
           <p className="text-base leading-relaxed text-text-secondary">
