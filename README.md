@@ -1,5 +1,7 @@
 # Stack Buddy
 
+**Live:** [orangedaddocs.github.io/stack-buddy](https://orangedaddocs.github.io/stack-buddy)
+
 ![Plan your stack — set a target, set a deadline, see your three approaches](docs/screenshots/plan-your-stack.png)
 
 Local-first BTC stacking planner. Type in a target and a deadline, see what it takes.
@@ -79,29 +81,40 @@ See [`private-ai/`](private-ai/) for setup notes — privacy postures of each ho
 
 Not financial, tax, or legal advice. Not a trading bot. Not a price prediction. Not a Monte Carlo simulator. Not a portfolio optimizer. Not a retirement planner. Not a SaaS.
 
-## Run it
+## Run it locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Frontend on `http://localhost:2035`, backend on `:2034`. No `.env` required for the calculator — only for the AI bits.
+Opens at `http://localhost:2035`. No `.env` required — there's no backend; the calculator is pure client-side JavaScript.
 
 | Script | What it does |
 |---|---|
-| `npm run dev` | Vite + Express together via concurrently |
-| `npm test` | Vitest (math, schema, server) |
+| `npm run dev` | Vite dev server with hot reload |
+| `npm run build` | Static build to `web/dist/` (this is what GitHub Pages serves) |
+| `npm run preview` | Serve the production build locally for testing |
+| `npm test` | Vitest (math + schema) |
 | `npm run typecheck` | `tsc -b` |
 | `npm run lint` | ESLint over .ts/.tsx |
 
-Stack: Vite + React + TypeScript + Tailwind + Recharts on the frontend; Node 20 + Express + TypeScript on the backend. Active math engine is at [shared/math/planningAudit.ts](shared/math/planningAudit.ts).
+Stack: Vite + React + TypeScript + Tailwind + Recharts. All client-side — no backend, no database, no accounts. Active math engine: [shared/math/planningAudit.ts](shared/math/planningAudit.ts).
+
+## Hosted vs self-hosted — the trust shift
+
+The live site at [orangedaddocs.github.io/stack-buddy](https://orangedaddocs.github.io/stack-buddy) is the same code as the repo, built and served by GitHub Pages. The math runs in your browser; nothing is sent server-side. The only outbound network call is to CoinGecko for the live BTC spot price (same as running locally).
+
+What changes when you visit the hosted version vs cloning:
+
+- **GitHub Pages sees your IP and user agent**, like any web server. Standard server logs. Doesn't see the numbers you type.
+- **You're trusting the served JS to be clean**, rather than reading every line yourself.
+
+For verifiability-maximalist Bitcoiners: clone the repo, run `npm run dev`, and verify the source. Same code, no IP visible to GitHub. For everyone else: the hosted version is fine.
 
 ## Troubleshooting
 
-**Port 2034/2035 conflict.** Change `port` in `web/vite.config.ts` and `PORT` in `.env`. The Vite proxy uses `127.0.0.1` (IPv4) explicitly to avoid IPv6/IPv4 routing collisions on some machines.
-
-**Plan advisor or chat says "AI is optional and not currently configured".** You haven't set an API key. The calculator still works; set `ANTHROPIC_API_KEY` in `.env` and restart if you want the AI bits.
+**Port 2035 conflict.** Change `port` in [web/vite.config.ts](web/vite.config.ts).
 
 **BTC price shows `—` or `(stale)`.** CoinGecko's free endpoint rate-limits sometimes. The Simple tab lets you type a price directly to override.
 

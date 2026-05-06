@@ -1,27 +1,20 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState } from 'react';
 import type { Scenario } from '../../../shared/types.js';
-import { api } from '../lib/api.js';
+import defaultScenario from '../../../scenarios/default.json';
 
-export function useScenario(slug: string) {
-  const [scenario, setScenario] = useState<Scenario | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Stack Buddy ships as a static site (GitHub Pages). The default scenario is
+// bundled directly into the JS at build time — no backend, no fetch, no API.
+// `slug` is preserved as a parameter for forward compatibility, but every
+// instance returns the same bundled default. A user who wants to load custom
+// scenarios from disk should clone the repo and build it themselves.
+const BUNDLED_DEFAULT = defaultScenario as unknown as Scenario;
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    api
-      .getScenario(slug)
-      .then((s) => { if (!cancelled) setScenario(s); })
-      .catch((e) => { if (!cancelled) setError(e.message); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [slug]);
+export function useScenario(_slug: string) {
+  const [scenario] = useState<Scenario>(BUNDLED_DEFAULT);
 
-  const save = useCallback(async (next: Scenario) => {
-    await api.saveScenario(next);
-    setScenario(next);
-  }, []);
-
-  return { scenario, setScenario, save, loading, error };
+  return {
+    scenario,
+    loading: false,
+    error: null as string | null,
+  };
 }
