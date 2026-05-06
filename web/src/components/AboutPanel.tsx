@@ -1,11 +1,6 @@
 import { useEffect } from 'react';
-import type { AIStripState } from './PrivacyStrip.js';
 
-export function AboutPanel(props: {
-  open: boolean;
-  onClose: () => void;
-  aiState: AIStripState;
-}) {
+export function AboutPanel(props: { open: boolean; onClose: () => void }) {
   useEffect(() => {
     if (!props.open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -48,68 +43,29 @@ export function AboutPanel(props: {
 
         <Section title="Local, math in plain sight">
           <p>
-            Every number on this page comes from JavaScript in this repo. The pricing model is the <strong>Catch-Up Power Law</strong> (full writeup is in the Models tab). Your scenarios are JSON files on your disk. There's no account, no database, nothing syncing to the cloud.
+            Every number on this page comes from JavaScript in this repo. The pricing model is the <strong>Catch-Up Power Law</strong> (full writeup is in the Models tab). Your scenarios are JSON files on your disk. There's no account, no database, no AI, nothing syncing to the cloud.
           </p>
         </Section>
 
-        <Section title="Optional AI">
+        <Section title="Want to talk through your plan with an AI?">
           <p>
-            The calculator doesn't need an LLM. AI is for what-ifs the canned model doesn't cover — things like "what if I get a $5K tax refund", "what if my income drops in 2027", "what would have to change for this to work". The numbers still come from the calculator; the LLM is for talking through scenarios.
-          </p>
-          <p>
-            If you turn AI on, your scenario JSON goes to whichever provider you configured. Privacy is on them after that. Don't paste seed phrases, wallet addresses, or tax documents.
-          </p>
-          <div className="rounded-xl border border-cream-200 bg-cream-50 px-4 py-3 text-base">
-            {props.aiState === 'ai-on' && (
-              <div>
-                <span className="font-semibold text-text-primary">AI is on right now.</span>{' '}
-                <span className="text-text-secondary">
-                  Anything you ask the plan advisor or chat panel sends your scenario to your configured provider. Use the <strong>Turn off for this session</strong> link at the top of the page to pause it without restarting.
-                </span>
-              </div>
-            )}
-            {props.aiState === 'ai-paused' && (
-              <div>
-                <span className="font-semibold text-text-primary">AI is paused for this session.</span>{' '}
-                <span className="text-text-secondary">
-                  A provider is configured but Stack Buddy will not send anything until you re-enable it from the strip at the top of the page. Reload to fully reset.
-                </span>
-              </div>
-            )}
-            {props.aiState === 'local' && (
-              <div>
-                <span className="font-semibold text-text-primary">AI is off.</span>{' '}
-                <span className="text-text-secondary">
-                  Add an API key to <code className="rounded bg-cream-100 px-1 py-0.5 text-[0.92em]">.env</code> and restart <code className="rounded bg-cream-100 px-1 py-0.5 text-[0.92em]">npm run dev</code> if you want it on. See <code className="rounded bg-cream-100 px-1 py-0.5 text-[0.92em]">.env.example</code>.
-                </span>
-              </div>
-            )}
-            {props.aiState === 'checking' && (
-              <div className="text-text-secondary">Checking…</div>
-            )}
-          </div>
-        </Section>
-
-        <Section title="Want private AI? Maple or Venice">
-          <p>
-            Two private AI hosts work well with Stack Buddy. Both keep your scenario out of the big LLM labs:
+            Stack Buddy itself is deterministic — the calculator does not call any LLM. If you want to reason through your plan with an AI, the privacy-respecting path is to paste{' '}
+            <code className="rounded bg-cream-100 px-1.5 py-0.5 text-[0.92em] text-text-primary">private-ai/prompt.md</code>{' '}
+            into a private AI host:
           </p>
           <ul className="ml-6 list-disc space-y-2">
             <li>
-              <strong className="text-text-primary">Maple AI</strong> — end-to-end encryption plus secure enclaves. Cryptographic proof that the server is running the audited code. Good if you want a permanent encrypted record synced across devices.
+              <strong className="text-text-primary">Maple AI</strong> — end-to-end encryption plus secure enclaves. Cryptographic proof the server runs the audited code.
             </li>
             <li>
-              <strong className="text-text-primary">Venice AI</strong> — zero-knowledge / local-first. Browser-only history, decentralized GPU inference. Good if you want stateless reasoning that leaves no trace.
+              <strong className="text-text-primary">Venice AI</strong> — zero-knowledge / local-first. Browser-only history, decentralized GPU inference.
             </li>
           </ul>
           <p>
-            The simplest way to use either: paste the contents of <code className="rounded bg-cream-100 px-1.5 py-0.5 text-[0.92em] text-text-primary">private-ai/prompt.md</code> into a fresh chat, then paste your audit packet (the "Copy audit packet" button on the Plan tab). The prompt has the Catch-Up Power Law math, a worked example, and the posture rules. The AI has everything it needs to reason about your plan.
-          </p>
-          <p>
-            The same prompt works in any LLM chat (Claude.ai, ChatGPT, local Ollama). The privacy posture is then whatever that host gives you.
+            The prompt has the Catch-Up Power Law math, a worked example, and the posture rules. Hand it your audit packet (the "Copy audit packet" button on the Plan tab) and ask away. The same prompt also works in Claude.ai, ChatGPT, or a local Ollama session — privacy is then whatever that host gives you.
           </p>
           <p className="text-base text-text-muted">
-            Not affiliated with either. Just pointing at the options that fit Stack Buddy's posture.{' '}
+            Not affiliated with either.{' '}
             <a
               href="https://trymaple.ai"
               target="_blank"
@@ -127,23 +83,6 @@ export function AboutPanel(props: {
             >
               venice.ai ↗
             </a>
-          </p>
-        </Section>
-
-        <Section title="Or wire up an in-app chat panel">
-          <p>
-            If you want the chat to live inside Stack Buddy alongside the audit table:
-          </p>
-          <ul className="ml-6 list-disc space-y-2">
-            <li>
-              <strong className="text-text-primary">Anthropic</strong> works out of the box. Set <code className="rounded bg-cream-100 px-1 py-0.5 text-[0.92em]">ANTHROPIC_API_KEY</code> in <code className="rounded bg-cream-100 px-1 py-0.5 text-[0.92em]">.env</code> and restart the dev server.
-            </li>
-            <li>
-              <strong className="text-text-primary">Maple Local Proxy</strong> works too. Enable Local Proxy in the Maple desktop app, then set <code className="rounded bg-cream-100 px-1 py-0.5 text-[0.92em]">MAPLE_BASE_URL</code> and <code className="rounded bg-cream-100 px-1 py-0.5 text-[0.92em]">MAPLE_API_KEY</code> in <code className="rounded bg-cream-100 px-1 py-0.5 text-[0.92em]">.env</code>. Maple's models (Kimi, GLM, DeepSeek, Llama, GPT-OSS) show up in the chat panel's model picker.
-            </li>
-          </ul>
-          <p className="text-base text-text-muted">
-            Honestly, the paste path above is simpler AND more private. This in-app path is for users who specifically want the chat inside the app's UI.
           </p>
         </Section>
 

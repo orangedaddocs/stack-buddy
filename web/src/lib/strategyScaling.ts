@@ -418,13 +418,28 @@ function ensureStrategyReachesTarget(
 
     const shortfallBtc = targetBtc - projection.btcAtDeadline;
     if (next.recurring.shape !== 'none' && next.recurring.amount_per_month > 0) {
-      const oneMoreDollar = {
+      // Bump recurring AND engine-seeded lumps proportionally so design ratios
+      // (e.g. Custom mix's "Jan 1 / Jul 1 = 2× DCA") survive target-reaching.
+      // Without this, the scaler sets recurring=$X, engine-seeded lumps=$2X,
+      // and then this loop bumps recurring up to $X+N without bumping the
+      // lumps — collapsing the 2:1 ratio into something like $X+$N : $2X.
+      // User-stated lumps (no `Target lump N` label) keep their amounts.
+      const lumpRatios = next.lump_sums.map((ls) =>
+        isEngineSeededPlaceholder(ls)
+          ? ls.amount / next.recurring.amount_per_month
+          : null,
+      );
+      const bumpProportionally = (recurringAmount: number): PlanStrategy => ({
         ...next,
-        recurring: {
-          ...next.recurring,
-          amount_per_month: next.recurring.amount_per_month + 1,
-        },
-      };
+        recurring: { ...next.recurring, amount_per_month: recurringAmount },
+        lump_sums: next.lump_sums.map((ls, idx) => {
+          const ratio = lumpRatios[idx];
+          return ratio !== null && ratio !== undefined
+            ? { ...ls, amount: Math.round(recurringAmount * ratio) }
+            : ls;
+        }),
+      });
+      const oneMoreDollar = bumpProportionally(next.recurring.amount_per_month + 1);
       const bumpedProjection = projectPlan(strategyToPlan(oneMoreDollar, args.basePlan), {
         startingBtc: args.basePlan.starting_btc,
         currentBtcPrice: args.currentPrice,
@@ -434,13 +449,7 @@ function ensureStrategyReachesTarget(
       const btcPerMonthlyDollar = bumpedProjection.btcAtDeadline - projection.btcAtDeadline;
       const dollarsToAdd =
         btcPerMonthlyDollar > 0 ? Math.max(1, Math.ceil(shortfallBtc / btcPerMonthlyDollar)) : 1;
-      next = {
-        ...next,
-        recurring: {
-          ...next.recurring,
-          amount_per_month: next.recurring.amount_per_month + dollarsToAdd,
-        },
-      };
+      next = bumpProportionally(next.recurring.amount_per_month + dollarsToAdd);
       continue;
     }
 
@@ -537,21 +546,68 @@ function defaultTargetLumps(
   today: Date,
   monthsToDeadline: number,
 ): LumpSum[] {
+  // Custom mix is the "DCA + calendar-anchored rituals" shape. Three recurring
+  // events per year give the strategy a recognizable story and produce visible
+  // bumps on the accumulation chart:
+  //   - Jan 1 and Jul 1 each year — labeled "Target lump N" so the scaler
+  //     treats them as placeholders that grow alongside the monthly DCA.
+  //     Seeded at $2 so the post-scale ratio lands at 2× DCA.
+  //   - Apr 15 each year — labeled "Tax refund {year}" so the scaler treats
+  //     it as user-stated and keeps the $5,000 amount fixed. The classic
+  //     stack-the-refund move.
+  // Schedule per year: 12 monthly DCA + 2× DCA on Jan 1 + 2× DCA on Jul 1 +
+  // $5,000 on Apr 15.
   const deadline = parseISODateUTC(plan.goal.deadline);
-  const count = Math.min(8, Math.max(3, Math.ceil(Math.max(1, monthsToDeadline) / 8)));
-  return Array.from({ length: count }, (_, i) => {
-    const offset =
-      count === 1
-        ? 1
-        : 1 + Math.floor((i * Math.max(1, monthsToDeadline - 1)) / Math.max(1, count - 1));
-    const date = addMonthsUTC(today, offset);
-    const clampedDate = date.getTime() > deadline.getTime() ? deadline : date;
-    return {
-      date: isoDateUTC(clampedDate),
-      amount: 1,
-      label: `Target lump ${i + 1}`,
-    };
-  });
+  const startYear = today.getUTCFullYear();
+  const endYear = deadline.getUTCFullYear();
+
+  const lumps: LumpSum[] = [];
+  let placeholderIdx = 1;
+
+  for (let year = startYear; year <= endYear; year++) {
+    const jan1 = new Date(Date.UTC(year, 0, 1));
+    if (jan1.getTime() > today.getTime() && jan1.getTime() <= deadline.getTime()) {
+      lumps.push({
+        date: isoDateUTC(jan1),
+        amount: 2,
+        label: `Target lump ${placeholderIdx++}`,
+      });
+    }
+  }
+
+  for (let year = startYear; year <= endYear; year++) {
+    const jul1 = new Date(Date.UTC(year, 6, 1));
+    if (jul1.getTime() > today.getTime() && jul1.getTime() <= deadline.getTime()) {
+      lumps.push({
+        date: isoDateUTC(jul1),
+        amount: 2,
+        label: `Target lump ${placeholderIdx++}`,
+      });
+    }
+  }
+
+  for (let year = startYear; year <= endYear; year++) {
+    const apr15 = new Date(Date.UTC(year, 3, 15));
+    if (apr15.getTime() > today.getTime() && apr15.getTime() <= deadline.getTime()) {
+      lumps.push({
+        date: isoDateUTC(apr15),
+        amount: 5000,
+        label: `Tax refund ${year}`,
+      });
+    }
+  }
+
+  // Fallback for very short windows where none of the calendar dates fall
+  // inside [today, deadline]. Drop a single placeholder near the midpoint
+  // so the strategy still has *something* to scale into.
+  if (lumps.length === 0) {
+    const offset = Math.max(1, Math.floor(monthsToDeadline / 2));
+    const midDate = addMonthsUTC(today, offset);
+    const clamped = midDate.getTime() > deadline.getTime() ? deadline : midDate;
+    return [{ date: isoDateUTC(clamped), amount: 1, label: 'Target lump 1' }];
+  }
+
+  return lumps.sort((a, b) => a.date.localeCompare(b.date));
 }
 
 export function strategyToPlan(strategy: PlanStrategy, plan: PlanState): PlanState {
@@ -581,7 +637,7 @@ export function initialPlan(
 ): PlanState {
   const plan: PlanState = {
     goal: {
-      target_btc: 1,
+      target_btc: 0.5,
       deadline: '2030-12-31',
     },
     starting_btc: 0,

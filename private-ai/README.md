@@ -1,52 +1,39 @@
-# Stack Buddy + private AI (Maple, Venice)
+# Stack Buddy + private AI (Maple, Venice, PPQ)
 
 ## What's actually happening
 
-Stack Buddy runs on your computer. When you clone this repo and run `npm run dev`, the calculator works locally — no accounts, no servers, nothing leaves your machine.
+Stack Buddy is a deterministic calculator. It runs on your computer and does not call any LLM — no in-app chat, no AI advisor, nothing leaves your machine.
 
-If you want to **talk** to your plan instead of just look at the audit table, paste [`prompt.md`](prompt.md) into a private AI chat. The math is in the prompt. Your scenario stays in the chat host you chose. That's it.
+If you want to **talk through your plan with an AI**, take [`prompt.md`](prompt.md) (or click **Download the catch-up prompt** on the 3 Approaches tab) and attach it to a chat in one of the privacy-respecting hosts below. The math in the prompt is the same Catch-Up Power Law math the calculator uses. Your scenario stays in the chat host you chose.
 
 ## Why this works
 
-The Stack Buddy app hardcodes the Catch-Up Power Law math into the deterministic calculator. [`prompt.md`](prompt.md) is the **same math, in text form** — formulas, the catch-up overlay, a worked example, a sanity-check table, and posture rules that keep the LLM sober.
+The Stack Buddy app hardcodes the Catch-Up Power Law math into the deterministic calculator. [`prompt.md`](prompt.md) is the **same math, in text form** — formulas, the catch-up overlay, a worked example, a sanity-check trendline table, and posture rules that keep the LLM sober.
 
-Two surfaces, one model. The app gives you the audit table. The prompt gives you the conversation. You can use either independently.
+Two surfaces, one model. The app gives you the audit table. The prompt gives you the conversation. They're independent — neither calls the other.
 
-## Why Maple or Venice
+## Three private AI hosts that work well with this prompt
 
-Both are private AI hosts that match Stack Buddy's local-first posture. They use different architectures:
+| Host | Privacy model | Pay with | Best for |
+|---|---|---|---|
+| **Maple AI** | End-to-end encryption + secure enclaves; cryptographic proof the server runs the audited code | **Bitcoin** ✓ | Permanent encrypted record across devices, sensitive document uploads |
+| **Venice AI** | Zero-knowledge / local-first; browser-only history, decentralized GPU inference | USD only | Stateless one-off reasoning, no account, leave no trace |
+| **PPQ.ai** | Pay-per-query proxy; no email/account, doesn't store query content (logs IP + uses provider moderation API) | **Bitcoin** ✓ | Low-friction "let me just try this" without installing or signing up for a full host |
 
-| | Maple | Venice |
-|---|---|---|
-| **Privacy model** | End-to-end encryption + secure enclaves (cryptographic proof the server runs the audited code) | Zero-knowledge / local-first (browser-only history, decentralized GPU inference) |
-| **History sync across devices** | Yes, E2EE | No (intentional — clear browser cache, history is gone) |
-| **Account required** | Optional | Optional / not required for basic use |
-| **Best fit** | Permanent encrypted record across devices, sensitive document uploads | Stateless one-off reasoning, leave no trace |
+**Maple and Venice are full hosts** — sign in there (or use anonymously, in Venice's case), pick a model, paste the prompt. **PPQ is a pay-per-query proxy** — load up some credits, query through their API or playground. Maple and PPQ both accept Bitcoin payment, which matters if you'd rather not put a card on file.
 
-Pick whichever matches your posture. The prompt works the same way in both.
-
-The same prompt also runs in Claude.ai, ChatGPT, Gemini, or a local Ollama / LM Studio session. The math is identical. The privacy posture is then whatever that host gives you — read their privacy policy before pasting anything sensitive.
+The prompt also runs in mainstream LLMs (Claude.ai, ChatGPT, Gemini), but those aren't private — your scenario lands in their logs. Use them only if you don't mind that.
 
 ## How to use it (3 steps)
 
-1. **Open Maple or Venice.** Start a fresh chat. Pick a model that handles a long first message — Kimi K2, GLM, DeepSeek, Llama 3.3, GPT-OSS, or whichever flagship the host offers.
-2. **Paste [`prompt.md`](prompt.md) as message 1.** The whole file, top to bottom.
-3. **As message 2, give the chat your situation.** Either:
-   - Type your numbers: BTC target, deadline, current spot, monthly available, any planned lump sums.
-   - Or paste an audit packet from the Stack Buddy app's Plan tab (the **"Copy audit packet for ChatGPT"** button — same packet works in any LLM).
+1. **Open Maple, Venice, or PPQ.** Start a fresh chat. Pick a model that handles a long first message — Kimi K2, GLM, DeepSeek, Llama 3.3, GPT-OSS, or whichever flagship the host offers.
+2. **Attach or paste [`prompt.md`](prompt.md).** Most hosts let you attach files directly. If yours doesn't, paste the entire file content as message 1.
+3. **As your next message, give the chat your situation.** Either:
+   - Type your numbers: BTC target, deadline, current spot, monthly available (or income/tax/burn/savings — the prompt will derive monthly), any planned lump sums.
+   - Or paste your plan from the Stack Buddy app's 3 Approaches tab (the **"Copy this plan"** button under the "Every buy" panel).
 
 That's the whole flow. Ask questions from there.
 
 ## What NOT to paste
 
 No seed phrases. No private keys. No exchange logins or API keys. No tax documents. No bank account numbers. None of it is needed for planning — aggregate numbers (income, burn, savings, target) are enough.
-
-## (Optional, for power users) In-app via API key
-
-You can also wire Stack Buddy's chat panel to a provider via API key, so the chat lives inside the app's UI alongside the audit table. Setup details are in [`.env.example`](../.env.example):
-
-- **Anthropic:** works out of the box. Set `ANTHROPIC_API_KEY` and restart `npm run dev`.
-- **Maple Local Proxy:** enable Local Proxy in the Maple desktop app, then set `MAPLE_API_KEY` and `MAPLE_BASE_URL` in `.env`. Restart.
-- **OpenAI / OpenAI-compatible:** set `OPENAI_API_KEY`.
-
-Honestly, the paste-into-Venice-or-Maple path above is simpler AND more private. Use the API path only if you specifically want the chat inside the app's UI. The Plan-tab advisor (the inline-with-the-audit-table one) only runs through Anthropic — it uses Anthropic's tool-use schema specifically.

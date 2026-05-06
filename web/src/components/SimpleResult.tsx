@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { formatDate, formatUSD } from '../../../shared/math/format.js';
 import type { SimpleInputs } from './SimpleCard.js';
 import { projectAccumulation } from '../lib/simpleProjection.js';
@@ -40,8 +41,11 @@ export function computeSimple(v: SimpleInputs): SimpleMath {
 }
 
 export function SimpleResult(props: { inputs: SimpleInputs }) {
-  const r = computeSimple(props.inputs);
-  const proj = projectAccumulation(props.inputs, 60);
+  // Memoize the math + projection so they only recompute when inputs change,
+  // not on every parent re-render. Big perf win in dev mode where typing
+  // into any field used to trigger a Recharts re-layout cascade.
+  const r = useMemo(() => computeSimple(props.inputs), [props.inputs]);
+  const proj = useMemo(() => projectAccumulation(props.inputs, 60), [props.inputs]);
   const avgPLPrice = proj.totalsAtEnd.averagePricePowerLaw;
   const effectiveAvgPrice = proj.totalsAtEnd.effectiveAverageBuyPrice;
   const firstBuy = proj.audit.timing.first_contribution_date;

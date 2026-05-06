@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -16,7 +17,11 @@ const BTC_LINE = 'BTC stacked';
 const FIAT_LINE = 'Fiat value';
 
 export function SimpleAccumulation(props: { inputs: SimpleInputs; onShowModelsTab?: () => void }) {
-  const proj = projectAccumulation(props.inputs, 60);
+  // Memoize so projectAccumulation only re-runs when the inputs actually
+  // change — not on every parent re-render (typing in any field used to
+  // trigger a full recompute + Recharts re-layout, which is what the
+  // dev-mode lag was).
+  const proj = useMemo(() => projectAccumulation(props.inputs, 60), [props.inputs]);
   const last = proj.points.at(-1);
   if (!last) return null;
   const firstBuy = proj.audit.timing.first_contribution_date;

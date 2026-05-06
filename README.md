@@ -61,15 +61,11 @@ The Simple tab takes gross income plus a tax rate. If you'd rather not enter gro
 
 Don't put seed phrases, private keys, exchange logins, or tax documents into this thing. None of that is needed for planning.
 
-## AI is optional
+## AI is not in the app — it's a separate paste
 
-The calculator is deterministic and works without any API key. AI is a reasoning aid for what-ifs the canned model doesn't cover ("what if I get a $5K bonus", "what if income drops in 2027", "what would have to change for this to work"). Numbers always come from the deterministic engine; the LLM is for talking through scenarios.
+Stack Buddy itself is deterministic. The calculator does not call any LLM, and there is no in-app chat. You either use the calculator, or — if you want to reason through your plan with an AI — you paste [`private-ai/prompt.md`](private-ai/prompt.md) into a private AI host (Maple or Venice). The prompt has the same Catch-Up Power Law math the calculator uses; your scenario stays in the chat host you chose.
 
-When AI is on, your scenario JSON is sent to the provider you configured. Leave the API fields blank if that's a problem.
-
-## Bring your own key
-
-**The recommended way to chat about your plan is to paste [`private-ai/prompt.md`](private-ai/prompt.md) into a private AI host (Maple or Venice). The math is in the prompt; your scenario stays in the chat host. No app setup needed.** If you want the chat panel inside Stack Buddy itself, see [`private-ai/`](private-ai/) for the API-key path.
+See [`private-ai/`](private-ai/) for the workflow.
 
 ## What this isn't
 

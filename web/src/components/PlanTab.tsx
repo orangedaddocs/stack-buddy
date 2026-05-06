@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { differenceInMonths, parseISO } from 'date-fns';
 import type {
   LumpSum,
@@ -9,22 +9,17 @@ import type {
   PlanStrategyKind,
   Scenario,
 } from '../../../shared/types.js';
-import type { SimpleInputs } from './SimpleCard.js';
-import { computeSimple } from './SimpleResult.js';
 import { PlanGoalCard } from './PlanGoalCard.js';
 import { PlanRecurringEditor } from './PlanRecurringEditor.js';
 import { PlanLumpSumEditor } from './PlanLumpSumEditor.js';
 import { PlanAccumulationChart, type ChartAlternative } from './PlanAccumulationChart.js';
-import { PlanFeasibilityNote } from './PlanFeasibilityNote.js';
 import { PlanAIAdvisor, type EvaluatedPlanStrategy } from './PlanAIAdvisor.js';
+import { AskAICard } from './AskAICard.js';
 import { PlanAuditPanel } from './PlanAuditPanel.js';
 import { projectPlan } from '../lib/planProjection.js';
-import { api } from '../lib/api.js';
 import { cashUsageLabel } from '../../../shared/math/cashFlow.js';
 import { formatUSD } from '../../../shared/math/format.js';
-import { parsePlanConstraints, type PlanConstraints } from '../lib/planConstraints.js';
-import { chooseRecommendedStrategy } from '../lib/recommendedStrategy.js';
-import { buildStackBuddyAnswer, type StackBuddyAnswer } from '../lib/stackBuddyAnswer.js';
+import { parsePlanConstraints } from '../lib/planConstraints.js';
 import {
   evaluateConstraintStatus,
   initialPlan,
@@ -36,35 +31,38 @@ import {
 
 type PlanMode = 'approaches' | 'custom';
 
+// 3 Approaches is intentionally disconnected from the Simple tab. This tab is
+// the *aspirational* view: "here's what it takes to hit your BTC goal" without
+// any judgment about whether your current cash flow can support it. Cash-flow
+// reality lives on the Simple tab; this tab is for picking an approach and
+// seeing the math. We pass 0 for monthlyAvailable so the engine still scales
+// strategies to the target — it just doesn't compute or display feasibility.
+
 export function PlanTab(props: {
   scenario: Scenario;
-  simple: SimpleInputs;
   livePrice: number | null;
-  aiAvailable: boolean | null;
   onShowModelsTab?: () => void;
 }) {
   const today = useMemo(() => new Date(), []);
-  const monthlyAvailable = computeSimple(props.simple).monthlyBudgetUSD;
-  const currentPrice = props.livePrice ?? props.simple.btcPrice;
+  const currentPrice = props.livePrice ?? 0;
+  // Aspirational view — no cash-flow constraint flows in from Simple.
+  const monthlyAvailable = 0;
 
   const [plan, setPlan] = useState<PlanState>(() => initialPlan(today, props.scenario, currentPrice));
   const [planMode, setPlanMode] = useState<PlanMode>('approaches');
-
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [strategies, setStrategies] = useState<PlanStrategy[] | null>(null);
   const [selectedKind, setSelectedKind] = useState<PlanStrategyKind | null>('monthly');
-  const [userNotes, setUserNotes] = useState<string>('');
-  const [advisorAsked, setAdvisorAsked] = useState(false);
   const [auditOpenRequestId, setAuditOpenRequestId] = useState(0);
-  const planConstraints = useMemo(() => parsePlanConstraints(userNotes), [userNotes]);
+  // Constraints used to come from a user-notes textarea ("front-load only,
+  // cap at $3K/mo"). With AI removed, no textarea exists, so constraints are
+  // empty — the deterministic engine just scales each approach to the target.
+  const planConstraints = useMemo(() => parsePlanConstraints(''), []);
 
   const monthsToDeadline = Math.max(
     0,
     differenceInMonths(parseISO(plan.goal.deadline), today),
   );
 
-  const defaultStrategies = useMemo(
+  const approachStrategies = useMemo(
     () =>
       makeDefaultApproachStrategies({
         basePlan: plan,
@@ -76,7 +74,6 @@ export function PlanTab(props: {
       }),
     [plan.goal, plan.starting_btc, currentPrice, today, monthlyAvailable, monthsToDeadline, planConstraints],
   );
-  const approachStrategies = strategies ?? defaultStrategies;
   const activeSelectedKind = planMode === 'approaches' ? selectedKind : null;
 
   const selectedStrategyForPlan = useMemo(() => {
@@ -184,66 +181,6 @@ export function PlanTab(props: {
       });
   }, [evaluatedStrategies, activeSelectedKind, plan.goal, plan.starting_btc, currentPrice, today]);
 
-  const recommendedView = useMemo(
-    () => chooseRecommendedStrategy(evaluatedStrategies, planConstraints, selectedKind),
-    [evaluatedStrategies, planConstraints, selectedKind],
-  );
-  const advisorAnswer = useMemo(
-    () =>
-      recommendedView
-        ? buildStackBuddyAnswer({
-            view: recommendedView,
-            goal: plan.goal,
-            constraints: planConstraints,
-            loading: aiLoading,
-          })
-        : null,
-    [recommendedView, plan.goal, planConstraints, aiLoading],
-  );
-
-  const askAI = async () => {
-    setPlanMode('approaches');
-    if (planConstraints.preferredKind) setSelectedKind(planConstraints.preferredKind);
-    setAdvisorAsked(true);
-    setAiLoading(true);
-    setAiError(null);
-    try {
-      const trimmedNotes = userNotes.trim();
-      const res = await api.planAdvise({
-        goal: plan.goal,
-        starting_btc: plan.starting_btc,
-        monthly_available_usd: monthlyAvailable,
-        current_btc_price: currentPrice,
-        scenario: props.scenario,
-        user_notes: trimmedNotes.length > 0 ? trimmedNotes : undefined,
-      });
-      const targetStrategies = res.strategies.map((strategy) =>
-        scaleStrategyToTarget(strategy, {
-          basePlan: plan,
-          currentPrice,
-          today,
-          monthlyAvailable,
-          monthsToDeadline,
-          constraints: planConstraints,
-        }),
-      );
-      setStrategies(targetStrategies);
-      // On re-advise: if a strategy of the previously-selected kind exists in
-      // the new set, swap to it so the editors/chart reflect the latest
-      // numbers. If not (or nothing was selected yet), default to monthly.
-      const preferredKind = planConstraints.preferredKind ?? selectedKind;
-      const preferred = preferredKind
-        ? targetStrategies.find((s) => s.kind === preferredKind)
-        : undefined;
-      const next = preferred ?? targetStrategies.find((s) => s.kind === 'monthly') ?? targetStrategies[0];
-      if (next) applyStrategy(next);
-    } catch (e) {
-      setAiError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
   const applyStrategy = (s: PlanStrategy) => {
     setPlanMode('approaches');
     setSelectedKind(s.kind);
@@ -285,16 +222,6 @@ export function PlanTab(props: {
     setPlan((p) => ({ ...p, lump_sums }));
   };
 
-  // Clear AI advice if the goal materially changes — they'll need fresh advice.
-  // (We keep the user's edited recurring/lump_sums; only AI proposals are stale.)
-  const goalKey = `${plan.goal.target_btc}|${plan.goal.deadline}`;
-  useEffect(() => {
-    setStrategies(null);
-    setSelectedKind('monthly');
-    setAiError(null);
-    setAdvisorAsked(false);
-  }, [goalKey]);
-
   return (
     <div className="mx-auto max-w-[860px] space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -315,38 +242,29 @@ export function PlanTab(props: {
         />
       </div>
 
-      <PlanGoalCard
-        goal={plan.goal}
-        userNotes={userNotes}
-        onGoalChange={setGoal}
-        onUserNotesChange={setUserNotes}
-        onAskAI={askAI}
-        loading={aiLoading}
-        hasAdvice={strategies !== null}
-        aiAvailable={props.aiAvailable}
-        planMode={planMode}
-      />
-
-      {planMode === 'approaches' && (advisorAsked || aiLoading) && advisorAnswer && (
-        <StackBuddyAnswerPanel
-          answer={advisorAnswer}
-          loading={aiLoading}
-          onUsePlan={() => {
-            if (recommendedView) applyStrategy(recommendedView.strategy);
-          }}
-          onViewAudit={() => setAuditOpenRequestId((id) => id + 1)}
-        />
-      )}
+      <PlanGoalCard goal={plan.goal} onGoalChange={setGoal} />
 
       {planMode === 'approaches' ? (
-        <PlanAIAdvisor
-          loading={aiLoading}
-          error={aiError}
-          strategies={evaluatedStrategies}
-          selectedKind={activeSelectedKind}
-          onSelect={applyStrategy}
-          onViewAudit={() => setAuditOpenRequestId((id) => id + 1)}
-        />
+        <>
+          <PlanAIAdvisor
+            strategies={evaluatedStrategies}
+            selectedKind={activeSelectedKind}
+            onSelect={applyStrategy}
+            onViewAudit={() => {
+            setAuditOpenRequestId((id) => id + 1);
+            // Tiny delay so the <details> finishes expanding before the scroll
+            // — otherwise the browser scrolls to the still-collapsed top edge
+            // and the rows you wanted to see end up below the viewport.
+            setTimeout(() => {
+              document.getElementById('every-buy-panel')?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+              });
+            }, 80);
+          }}
+          />
+          <AskAICard />
+        </>
       ) : (
         <>
           <PlanRecurringEditor
@@ -357,14 +275,6 @@ export function PlanTab(props: {
 
           <PlanLumpSumEditor value={plan.lump_sums} onChange={setLumps} />
         </>
-      )}
-
-      {planMode === 'custom' && (
-        <PlanFeasibilityNote
-          totalDeployed={projection.totalDollarsDeployed}
-          monthsToDeadline={monthsToDeadline}
-          monthlyAvailableUSD={monthlyAvailable}
-        />
       )}
 
       <PlanTimingSummary projection={projection} />
@@ -383,9 +293,6 @@ export function PlanTab(props: {
       <PlanAuditPanel
         projection={projection}
         plan={plan}
-        simple={props.simple}
-        cashUsageRate={cashUsageRate}
-        feasibilityLabel={feasibilityLabel}
         selectedKind={activeSelectedKind}
         openRequestId={auditOpenRequestId}
       />
@@ -419,53 +326,6 @@ function ModeButton(props: { active: boolean; onClick: () => void; children: Rea
     >
       {props.children}
     </button>
-  );
-}
-
-function StackBuddyAnswerPanel(props: {
-  answer: StackBuddyAnswer;
-  loading: boolean;
-  onUsePlan: () => void;
-  onViewAudit: () => void;
-}) {
-  // Color the headline by tone so the page can never have an "AI says this
-  // fits" headline above a red "funding gap" banner. Unfunded → error red,
-  // tradeoff → warning amber, fits → neutral text-primary.
-  const headlineClass =
-    props.answer.tone === 'unfunded'
-      ? 'text-2xl font-semibold text-error'
-      : props.answer.tone === 'needs_tradeoff'
-        ? 'text-2xl font-semibold text-[#9a4f1d]'
-        : 'text-2xl font-semibold text-text-primary';
-  return (
-    <div className="rounded-[20px] border border-cream-300 bg-white p-6">
-      <div className="mb-2 text-base font-bold uppercase tracking-[0.06em] text-text-muted">
-        {props.loading ? 'Asking Stack Buddy AI...' : 'Stack Buddy AI'}
-      </div>
-      <h3 className={headlineClass}>{props.answer.headline}</h3>
-      <p className="mt-2 text-base leading-relaxed text-text-secondary">{props.answer.summary}</p>
-      <div className="mt-4 space-y-2 text-base leading-relaxed text-text-secondary">
-        {props.answer.bullets.map((line) => (
-          <p key={line}>{line}</p>
-        ))}
-      </div>
-      <div className="mt-5 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={props.onUsePlan}
-          className="btc-grad rounded-xl px-5 py-2.5 text-base font-semibold text-white shadow-[0_4px_16px_rgba(247,147,26,0.22)]"
-        >
-          Use {props.answer.recommendedKind}
-        </button>
-        <button
-          type="button"
-          onClick={props.onViewAudit}
-          className="rounded-xl border border-cream-300 bg-white px-5 py-2.5 text-base font-semibold text-text-primary hover:border-btc-orange hover:text-btc-orange-end"
-        >
-          See monthly buys
-        </button>
-      </div>
-    </div>
   );
 }
 

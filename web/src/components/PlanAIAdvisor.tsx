@@ -1,5 +1,4 @@
 import type { CashUsageLabel } from '../../../shared/math/cashFlow.js';
-import { cashUsageLabelText } from '../../../shared/math/cashFlow.js';
 import { formatDate, formatUSD } from '../../../shared/math/format.js';
 import type { PlanStrategy, PlanStrategyKind } from '../../../shared/types.js';
 import type { PlanProjectionResult } from '../lib/planProjection.js';
@@ -13,7 +12,8 @@ const KIND_LABEL: Record<PlanStrategyKind, string> = {
 const KIND_DESCRIPTION: Record<PlanStrategyKind, string> = {
   front_load: 'Heavier early at the lower modeled price, tapering as the catch-up path lifts.',
   monthly: 'Flat $/month, every month, until the deadline.',
-  lump_sums: 'Dated buys plus DCA when that better fits your notes.',
+  lump_sums:
+    'Monthly DCA plus annual rituals: 2× DCA on Jan 1 and Jul 1, $5,000 tax-refund buy on Apr 15.',
 };
 
 export type EvaluatedPlanStrategy = {
@@ -31,38 +31,15 @@ export type PlanConstraintStatus = {
 };
 
 export function PlanAIAdvisor(props: {
-  loading: boolean;
-  error: string | null;
   strategies: EvaluatedPlanStrategy[] | null;
   selectedKind: PlanStrategyKind | null;
   onSelect: (s: PlanStrategy) => void;
   onViewAudit: () => void;
 }) {
-  if (!props.loading && !props.error && !props.strategies) return null;
+  if (!props.strategies) return null;
 
   return (
     <div className="rounded-[20px] border border-cream-300 bg-cream-50 p-6">
-      <div className="mb-3 flex items-baseline justify-between">
-        <div className="text-base font-bold uppercase tracking-[0.06em] text-text-muted">
-          Three approaches
-        </div>
-        {props.loading && <div className="text-base text-text-muted">Asking Stack Buddy...</div>}
-      </div>
-
-      {props.error && (
-        <div className="rounded-xl border border-error/40 bg-[#fbe9e6] px-4 py-3 text-base text-error">
-          {props.error}
-        </div>
-      )}
-
-      {props.loading && !props.strategies && (
-        <div className="space-y-3">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-2xl border border-cream-300 bg-white" />
-          ))}
-        </div>
-      )}
-
       {props.strategies && (
         <div className="space-y-3">
           <p className="text-base leading-relaxed text-text-secondary">
@@ -95,11 +72,6 @@ export function PlanAIAdvisor(props: {
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-center gap-3">
                       <h3 className="text-xl font-semibold text-text-primary">{KIND_LABEL[s.kind]}</h3>
-                      <FeasibilityBadge label={view.cashUsageLabel} />
-                      {view.constraintStatus && <ConstraintBadge status={view.constraintStatus} />}
-                      <span className="rounded-full bg-cream-100 px-2.5 py-0.5 text-sm font-semibold uppercase tracking-wide text-text-muted">
-                        Priced by deterministic engine
-                      </span>
                       {view.stale && (
                         <span className="rounded-full bg-[#fbe9e6] px-2.5 py-0.5 text-sm font-semibold uppercase tracking-wide text-error">
                           Needs recalculation
@@ -113,10 +85,7 @@ export function PlanAIAdvisor(props: {
                       {view.projection.btcAtDeadline.toFixed(4)} BTC
                     </div>
                     <div className="text-base text-text-muted">
-                      Calculator result · {formatUSD(view.projection.totalDollarsDeployed)} deployed
-                    </div>
-                    <div className="text-base text-text-muted">
-                      Cash usage {pct(view.cashUsageRate)}
+                      {formatUSD(view.projection.totalDollarsDeployed)} deployed
                     </div>
                   </div>
                 </div>
@@ -133,7 +102,7 @@ export function PlanAIAdvisor(props: {
                     }}
                     className="inline-flex items-center gap-1 text-base font-medium text-text-muted hover:text-btc-orange-end"
                   >
-                    View audit
+                    View monthly buys
                   </button>
                   <button
                     type="button"
@@ -225,10 +194,38 @@ function buildStrategyNarrative(view: EvaluatedPlanStrategy): string[] {
   const datedBuys = lumpRows.length || rows.length;
   if (lumpRows.length > 0 && recurringRows.length > 0) {
     const amount = view.strategy.recurring.amount_per_month;
+    const firstRecurring = recurringRows[0] ?? first;
+    const taxRefundRows = lumpRows.filter((row) => /^Tax refund \d{4}$/.test(row.label));
+    const targetLumpRows = lumpRows.filter((row) => /^Target lump \d+$/.test(row.label));
+
+    if (targetLumpRows.length > 0 || taxRefundRows.length > 0) {
+      const lines: string[] = [
+        `Monthly DCA of ${formatUSD(amount)} starts on ${formatDate(firstRecurring.date_iso)} and runs through ${formatDate(last.date_iso)} — ${recurringRows.length} buys.`,
+      ];
+      if (targetLumpRows.length > 0) {
+        const example = targetLumpRows[0]!;
+        lines.push(
+          `Each January 1 and July 1, double up: ${formatUSD(example.amount_usd)} per buy, ${targetLumpRows.length} total across the window.`,
+        );
+      }
+      if (taxRefundRows.length > 0) {
+        const example = taxRefundRows[0]!;
+        lines.push(
+          `Each April 15, layer in a ${formatUSD(example.amount_usd)} tax-refund buy — ${taxRefundRows.length} total.`,
+        );
+      }
+      lines.push(
+        `Total deployed is ${formatUSD(totals.total_deployed)}, your effective average buy price is ${effective}, and the plan reaches ${finalBtc} BTC by ${formatDate(deadline)}.`,
+      );
+      return lines;
+    }
+
+    // Fallback for any mixed-path shape that doesn't match the
+    // calendar-anchored Custom mix template (e.g. user-edited lumps).
     const secondLine =
       secondLump && secondLump.date_iso !== firstLump.date_iso
         ? `Then make a second dated buy of ${formatUSD(secondLump.amount_usd)} on ${formatDate(secondLump.date_iso)}, buying about ${secondLump.btc_bought.toFixed(4)} BTC.`
-        : `Those dated buys handle the larger planned moments from your notes.`;
+        : `Those dated buys handle the larger planned moments.`;
     return [
       `Use a mixed path: ${lumpRows.length} dated buy${lumpRows.length === 1 ? '' : 's'} plus ${recurringRows.length} DCA buy${recurringRows.length === 1 ? '' : 's'}.`,
       `The first dated buy is ${formatUSD(firstLump.amount_usd)} on ${formatDate(firstLump.date_iso)}, buying about ${firstLump.btc_bought.toFixed(4)} BTC at ${formatUSD(firstLump.btc_price_used)}.`,
@@ -260,49 +257,3 @@ function buildStrategyNarrative(view: EvaluatedPlanStrategy): string[] {
   ];
 }
 
-function FeasibilityBadge(props: { label: CashUsageLabel }) {
-  const text = props.label === 'unfunded' ? 'Funding gap' : cashUsageLabelText(props.label);
-  const styles =
-    props.label === 'comfortable'
-      ? 'bg-[#e8efe8] text-[#3a6b3a]'
-      : props.label === 'manageable'
-        ? 'bg-[#fff6dc] text-[#7a6633]'
-      : props.label === 'tight'
-        ? 'bg-[#fdf0e8] text-[#a06c4a]'
-        : props.label === 'very_tight'
-          ? 'bg-[#fff0df] text-[#9a4f1d]'
-        : 'bg-[#fbe9e6] text-error';
-  return (
-    <span className={`rounded-full px-2.5 py-0.5 text-sm font-semibold uppercase tracking-wide ${styles}`}>
-      {text}
-    </span>
-  );
-}
-
-function ConstraintBadge(props: { status: PlanConstraintStatus }) {
-  const styles =
-    props.status.label === 'fits'
-      ? 'bg-[#e8efe8] text-[#3a6b3a]'
-      : props.status.label === 'needs_tradeoff'
-        ? 'bg-[#fff6dc] text-[#7a6633]'
-        : 'bg-[#fbe9e6] text-error';
-  const text =
-    props.status.label === 'fits'
-      ? 'Fits your limits'
-      : props.status.label === 'needs_tradeoff'
-        ? 'Needs tradeoff'
-        : 'Violates limit';
-  return (
-    <span
-      title={props.status.message}
-      className={`rounded-full px-2.5 py-0.5 text-sm font-semibold uppercase tracking-wide ${styles}`}
-    >
-      {text}
-    </span>
-  );
-}
-
-function pct(r: number): string {
-  if (!Number.isFinite(r)) return '—';
-  return `${Math.round(r * 100)}%`;
-}

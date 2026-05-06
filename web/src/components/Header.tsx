@@ -3,7 +3,7 @@ import { b1mPrice } from '../../../shared/math/powerLaw.js';
 
 export type Tab = 'simple' | 'plan' | 'models';
 
-export function Header(props: { tab: Tab; onTabChange: (t: Tab) => void }) {
+export function Header(props: { tab: Tab; onTabChange: (t: Tab) => void; onShowAbout: () => void }) {
   const btc = useBtcPrice();
   const today = new Date();
   const modelPrice = b1mPrice(today);
@@ -28,7 +28,7 @@ export function Header(props: { tab: Tab; onTabChange: (t: Tab) => void }) {
             Simple
           </TabButton>
           <TabButton active={props.tab === 'plan'} onClick={() => props.onTabChange('plan')}>
-            Plan
+            3 Approaches
           </TabButton>
           <TabButton active={props.tab === 'models'} onClick={() => props.onTabChange('models')}>
             Models
@@ -36,7 +36,16 @@ export function Header(props: { tab: Tab; onTabChange: (t: Tab) => void }) {
         </nav>
       </div>
 
-      <div className="flex items-center gap-4 rounded-2xl border border-cream-300 bg-white px-4 py-2 shadow-sm">
+      <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={props.onShowAbout}
+          className="text-base text-text-muted hover:text-btc-orange-end"
+        >
+          How this works ↗
+        </button>
+
+        <div className="flex items-center gap-4 rounded-2xl border border-cream-300 bg-white px-4 py-2 shadow-sm">
         <div className="btc-grad flex h-9 w-9 items-center justify-center rounded-xl text-lg font-bold text-white">₿</div>
         <div className="flex flex-col">
           <span className="text-sm font-bold uppercase tracking-wide text-text-muted">BTC spot</span>
@@ -56,6 +65,7 @@ export function Header(props: { tab: Tab; onTabChange: (t: Tab) => void }) {
             ↻ {btc.updatedAt ? formatRelative(btc.updatedAt) : 'never'}
             {btc.stale ? ' (stale)' : ''}
           </button>
+        </div>
         </div>
       </div>
     </div>

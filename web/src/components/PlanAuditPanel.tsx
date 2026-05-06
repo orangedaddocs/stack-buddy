@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { CashUsageLabel } from '../../../shared/math/cashFlow.js';
-import { cashUsageLabelText } from '../../../shared/math/cashFlow.js';
 import { formatUSD } from '../../../shared/math/format.js';
 import type { PlanState, PlanStrategyKind } from '../../../shared/types.js';
-import type { SimpleInputs } from './SimpleCard.js';
 import type { PlanProjectionResult } from '../lib/planProjection.js';
 
 const APP_VERSION = '0.1.0';
@@ -11,9 +8,6 @@ const APP_VERSION = '0.1.0';
 export function PlanAuditPanel(props: {
   projection: PlanProjectionResult;
   plan: PlanState;
-  simple: SimpleInputs;
-  cashUsageRate: number;
-  feasibilityLabel: CashUsageLabel;
   selectedKind: PlanStrategyKind | null;
   openRequestId: number;
 }) {
@@ -48,6 +42,7 @@ export function PlanAuditPanel(props: {
 
   return (
     <details
+      id="every-buy-panel"
       open={open}
       onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
       className="rounded-2xl border border-cream-300 bg-white p-7"
@@ -56,17 +51,17 @@ export function PlanAuditPanel(props: {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="mb-1 text-base font-bold uppercase tracking-[0.06em] text-text-muted">
-              Deterministic audit
+              Every buy
             </div>
             <div className="text-lg font-semibold text-text-primary">
               {rows.length} buys · {props.projection.btcAtDeadline.toFixed(4)} BTC at deadline
             </div>
             <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-cream-300 bg-cream-50 px-3 py-2 text-base font-semibold text-btc-orange-end hover:border-btc-orange hover:bg-[#fffaf5]">
-              {open ? 'Hide monthly buys for this plan' : 'See your monthly buys for this plan'}
+              {open ? 'Hide the buy schedule' : 'Show every buy in this plan'}
               <span aria-hidden="true">{open ? '↑' : '↓'}</span>
             </div>
             <p className="mt-2 text-base leading-relaxed text-text-secondary">
-              Shows every buy date, BTC price used, dollars deployed, and BTC bought.
+              Date, price used, dollars deployed, and BTC bought — for every buy in the plan.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -78,7 +73,7 @@ export function PlanAuditPanel(props: {
               }}
               className="rounded-lg border border-cream-300 bg-white px-3 py-2 text-base font-medium text-text-primary hover:border-btc-orange hover:text-btc-orange-end"
             >
-              Download audit CSV
+              Download as CSV
             </button>
             <button
               type="button"
@@ -88,7 +83,7 @@ export function PlanAuditPanel(props: {
               }}
               className="rounded-lg border border-cream-300 bg-white px-3 py-2 text-base font-medium text-text-primary hover:border-btc-orange hover:text-btc-orange-end"
             >
-              Export plan JSON
+              Export as JSON
             </button>
             <button
               type="button"
@@ -98,7 +93,7 @@ export function PlanAuditPanel(props: {
               }}
               className="rounded-lg border border-cream-300 bg-white px-3 py-2 text-base font-medium text-text-primary hover:border-btc-orange hover:text-btc-orange-end"
             >
-              {copied ? 'Copied' : 'Copy audit packet for ChatGPT'}
+              {copied ? 'Copied' : 'Copy this plan'}
             </button>
           </div>
         </div>
@@ -115,11 +110,10 @@ export function PlanAuditPanel(props: {
         </div>
       )}
 
-      <div className="mt-5 grid grid-cols-1 gap-4 border-y border-cream-200 py-4 sm:grid-cols-4">
+      <div className="mt-5 grid grid-cols-1 gap-4 border-y border-cream-200 py-4 sm:grid-cols-3">
         <AuditStat label="Total deployed" value={formatUSD(props.projection.totalDollarsDeployed)} />
         <AuditStat label="Effective buy price" value={formatUSD(props.projection.audit.totals.effective_average_buy_price)} />
         <AuditStat label="Final BTC price" value={formatUSD(props.projection.audit.totals.final_btc_price)} />
-        <AuditStat label="Cash status" value={cashUsageLabelText(props.feasibilityLabel)} />
       </div>
 
       <div className="mt-5 overflow-x-auto">
@@ -169,16 +163,13 @@ export function PlanAuditPanel(props: {
 function buildAuditPacket(props: {
   projection: PlanProjectionResult;
   plan: PlanState;
-  simple: SimpleInputs;
-  cashUsageRate: number;
-  feasibilityLabel: CashUsageLabel;
   selectedKind: PlanStrategyKind | null;
 }) {
+  // 3 Approaches is intentionally disconnected from the Simple tab's cash
+  // flow. The packet is the *plan* — goal, model, schedule, every buy. Cash-
+  // flow context (income, burn, savings) lives on the Simple tab and the
+  // user can describe it directly to the AI in their own words if relevant.
   const p = props.projection;
-  const taxesPaid = props.simple.annualIncome * (props.simple.taxRatePct / 100);
-  const afterTax = props.simple.annualIncome - taxesPaid;
-  const rawNet = afterTax - props.simple.annualBurn - props.simple.annualSavings;
-  const annualNet = Math.max(0, rawNet);
 
   return {
     app: 'Stack Buddy',
@@ -193,15 +184,6 @@ function buildAuditPacket(props: {
       catchupPrice: p.audit.model.catchup_price,
       postCatchup: 'b1m_1x',
     },
-    cashFlow: {
-      annualIncome: props.simple.annualIncome,
-      taxRate: props.simple.taxRatePct / 100,
-      annualBurn: props.simple.annualBurn,
-      annualCashSavings: props.simple.annualSavings,
-      netAvailableForBtcAnnual: annualNet,
-      netAvailableForBtcMonthly: annualNet / 12,
-      cashFlowShortfall: Math.min(0, rawNet),
-    },
     goal: {
       // The calculator is intentionally OPSEC-conservative: it never asks
       // how much BTC the user already holds. `additionalBtcToBuy` is the
@@ -215,8 +197,6 @@ function buildAuditPacket(props: {
       totalDeployed: p.totalDollarsDeployed,
       btcAtDeadline: p.btcAtDeadline,
       fiatValueAtDeadline: p.netWorthAtDeadline,
-      cashUsageRate: props.cashUsageRate,
-      feasibilityLabel: cashUsageLabelText(props.feasibilityLabel),
     },
     auditRows: p.audit.auditRows,
   };
