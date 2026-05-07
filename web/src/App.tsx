@@ -4,6 +4,7 @@ import { useBtcPrice } from './hooks/useBtcPrice.js';
 import { Header, type Tab } from './components/Header.js';
 import { PillarStrip } from './components/PillarStrip.js';
 import { Footer } from './components/Footer.js';
+import { DownloadRepoCard } from './components/DownloadRepoCard.js';
 import { SimpleCard, type SimpleInputs, SIMPLE_DEFAULTS } from './components/SimpleCard.js';
 import { SimpleResult } from './components/SimpleResult.js';
 import { SimpleAccumulation } from './components/SimpleAccumulation.js';
@@ -64,6 +65,7 @@ export function App() {
         )}
       </main>
 
+      <DownloadRepoCard />
       <Footer />
     </>
   );

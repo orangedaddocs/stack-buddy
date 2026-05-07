@@ -43,7 +43,12 @@ export function PillarStrip(props: {
   return (
     <nav
       aria-label="Stack Buddy pillars"
-      className="border-b border-cream-300 bg-cream-50"
+      // sm:sticky keeps the strip glued to the top on desktop so users can
+      // switch pillars from anywhere on long pages (audit table, Models
+      // writeup). Mobile stays non-sticky — the 2x2 grid is too tall to
+      // burn that much viewport. z-30 sits above any inline elements but
+      // below modals if we ever add any.
+      className="border-b border-cream-300 bg-cream-50 sm:sticky sm:top-0 sm:z-30"
     >
       <div className="mx-auto grid max-w-[1180px] grid-cols-2 gap-2 px-4 py-3 sm:grid-cols-4 sm:gap-3 sm:px-8 sm:py-4">
         {PILLARS.map((p) => {

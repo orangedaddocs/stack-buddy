@@ -27,17 +27,20 @@ export function UseYourAITab() {
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <HostCard
             name="Maple AI"
+            url="https://trymaple.ai"
             privacy="E2E encryption + secure enclaves"
             payTag="Pay with BTC ✓"
             payAccent
           />
           <HostCard
             name="Venice AI"
+            url="https://venice.ai"
             privacy="Browser-only, zero-knowledge"
             payTag="USD only"
           />
           <HostCard
             name="PPQ.ai"
+            url="https://ppq.ai"
             privacy="Pay-per-query proxy, no account"
             payTag="Pay with BTC ✓"
             payAccent
@@ -107,14 +110,23 @@ function StepCard(props: {
 
 function HostCard(props: {
   name: string;
+  url: string;
   privacy: string;
   payTag: string;
   payAccent?: boolean;
 }) {
+  // Anchor (not button) so right-click "open in new tab", middle-click,
+  // and copy-link-address all work — these are external destinations,
+  // not in-app actions.
   return (
-    <div className="rounded-xl border border-cream-300 bg-cream-50 p-3">
+    <a
+      href={props.url}
+      target="_blank"
+      rel="noreferrer"
+      className="block rounded-xl border border-cream-300 bg-cream-50 p-3 transition hover:border-btc-orange-end hover:bg-cream-100 hover:shadow-sm"
+    >
       <div className="text-base font-semibold text-text-primary">
-        {props.name}
+        {props.name} <span className="text-xs font-normal text-text-muted">↗</span>
       </div>
       <div className="mt-1 text-sm leading-snug text-text-secondary">
         {props.privacy}
@@ -128,6 +140,6 @@ function HostCard(props: {
       >
         {props.payTag}
       </div>
-    </div>
+    </a>
   );
 }

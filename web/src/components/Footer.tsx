@@ -7,7 +7,13 @@ export function Footer() {
   return (
     <footer className="border-t border-cream-300 bg-cream-50">
       <div className="mx-auto flex max-w-[1180px] flex-col items-center justify-between gap-2 px-4 py-4 text-sm text-text-muted sm:flex-row sm:px-8">
-        <span>Stack Buddy</span>
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="hover:text-btc-orange-end"
+        >
+          ↑ Back to top
+        </button>
         <a
           href="https://github.com/orangedaddocs/stack-buddy#readme"
           target="_blank"
