@@ -24,7 +24,7 @@ Every buy is priced by the same model and shown in an audit table you can export
 
 ## How it runs
 
-A static site you load once and use in the browser. No accounts, no database, no cloud sync. Scenarios are JSON files in `scenarios/`. Exports are local files. The calculator doesn't call any LLM. The only network requests it makes are to CoinGecko for the live BTC spot price on first load. AI is intentionally not in the app — see the "AI is not in the app" section below for the privacy-respecting paste flow.
+A static site you load once and use in the browser. No accounts, no database, no cloud sync. Scenarios are JSON files in `scenarios/`. Exports are local files. **The calculator doesn't call any LLM.** The only network requests it makes are to CoinGecko for the live BTC spot price on first load. AI is intentionally not in the app — see the "AI is not in the app" section below for the privacy-respecting paste flow.
 
 ## The three planning shapes
 
