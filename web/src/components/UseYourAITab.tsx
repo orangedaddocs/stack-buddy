@@ -36,7 +36,7 @@ export function UseYourAITab() {
             name="Venice AI"
             url="https://venice.ai"
             privacy="Browser-only, zero-knowledge"
-            payTag="USD only"
+            payTag="USD and USDC"
           />
           <HostCard
             name="PPQ.ai"
