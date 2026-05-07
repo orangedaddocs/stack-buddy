@@ -9,10 +9,10 @@ export function DownloadRepoCard() {
       <div className="mx-auto flex max-w-[1180px] flex-col items-start gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-10">
         <div className="flex-1">
           <h2 className="mb-1 text-xl font-semibold leading-tight text-text-primary sm:text-2xl">
-            Want to play with this yourself?
+            Want to run this in your own coding AI?
           </h2>
           <p className="text-base leading-relaxed text-text-secondary">
-            Stack Buddy is open source. If you want to experiment in Claude Code, Codex, or your favorite coding AI, visit the repo and download everything. Enjoy.
+            Stack Buddy is open source. Drop the repo into Claude Code, Codex, or your favorite AI-powered editor and tinker. Fork it, build on it, make it yours.
           </p>
         </div>
         <a

@@ -61,10 +61,34 @@ export function UseYourAITab() {
         </a>
       </StepCard>
 
-      <StepCard num="3" title="Paste your plan as the next message">
+      <StepCard num="3" title="Tell the AI your situation">
         <p className="text-base leading-relaxed text-text-secondary">
-          Use the <span className="font-semibold text-text-primary">Copy this plan</span> button on Three Approaches, or just type your numbers (target, deadline, monthly available).
+          Two ways to give the AI your context — pick whichever feels easier.
         </p>
+
+        <div className="mt-4 rounded-xl border border-cream-300 bg-cream-50 p-4">
+          <div className="text-xs font-bold uppercase tracking-wider text-btc-orange-end">
+            Option A — Paste your plan as JSON
+          </div>
+          <p className="mt-2 text-base leading-relaxed text-text-secondary">
+            Open <span className="font-semibold text-text-primary">Three Approaches</span> and scroll to the bottom. In the <span className="font-semibold text-text-primary">"Every buy"</span> panel header (it's the last card on the page), tap <span className="font-semibold text-text-primary">Copy this plan</span>. That puts your full plan — target, deadline, schedule, every priced buy — on the clipboard as JSON. Paste it to the AI as your next message.
+          </p>
+        </div>
+
+        <div className="mt-3 rounded-xl border border-cream-300 bg-cream-50 p-4">
+          <div className="text-xs font-bold uppercase tracking-wider text-btc-orange-end">
+            Option B — Just type your situation
+          </div>
+          <p className="mt-2 text-base leading-relaxed text-text-secondary">
+            If you'd rather skip the JSON, describe your scenario in plain English. Something like:
+          </p>
+          <blockquote className="mt-3 rounded-lg border-l-4 border-btc-orange-end bg-white px-4 py-3 text-base italic leading-relaxed text-text-secondary">
+            "I want to stack 1 BTC by December 31, 2030. I can put about $2,500 a month toward Bitcoin, plus a $5,000 lump every spring from my tax refund. What approach makes the most sense?"
+          </blockquote>
+          <p className="mt-3 text-sm text-text-muted">
+            Mention your <span className="font-semibold text-text-primary">target</span> (how much BTC), your <span className="font-semibold text-text-primary">deadline</span>, and what cash you can deploy (monthly, lumps, both). The prompt does the math — you provide the situation.
+          </p>
+        </div>
       </StepCard>
 
       <div className="rounded-2xl border border-error/40 bg-[#fbe9e6] px-5 py-4 text-base leading-relaxed text-error">
